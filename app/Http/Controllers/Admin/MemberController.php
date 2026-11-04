@@ -36,10 +36,21 @@ class MemberController extends Controller
             $query->where('graduation_year', $request->string('year'));
         }
 
+        if ($request->filled('class')) {
+            $query->where('class_name', $request->string('class'));
+        }
+
+        if ($request->filled('major')) {
+            $query->where('major', $request->string('major'));
+        }
+
         if ($request->filled('search')) {
             $search = $request->string('search');
             $query->where(function ($q) use ($search) {
                 $q->where('student_name', 'like', "%{$search}%")
+                    ->orWhere('nis', 'like', "%{$search}%")
+                    ->orWhere('class_name', 'like', "%{$search}%")
+                    ->orWhere('major', 'like', "%{$search}%")
                     ->orWhere('graduation_year', 'like', "%{$search}%")
                     ->orWhereHas('user', function ($uq) use ($search) {
                         $uq->where('email', 'like', "%{$search}%")
@@ -48,7 +59,7 @@ class MemberController extends Controller
             });
         }
 
-        $members = $query->paginate(12)->withQueryString();
+        $members = $query->paginate(15)->withQueryString();
 
         $memberSummary = Member::selectRaw('
             COUNT(*) as total_members,
@@ -59,14 +70,18 @@ class MemberController extends Controller
         $totalMembers = (int) ($memberSummary?->total_members ?? 0);
         $inactiveCount = (int) ($memberSummary?->inactive_count ?? 0);
         $activeCount = (int) ($memberSummary?->active_count ?? 0);
-        $batches = Member::distinct()->pluck('graduation_year')->sortDesc();
+        $batches = Member::distinct()->whereNotNull('graduation_year')->pluck('graduation_year')->sortDesc();
+        $majors = Member::distinct()->whereNotNull('major')->pluck('major')->sort();
+        $classes = Member::distinct()->whereNotNull('class_name')->pluck('class_name')->sort();
 
         return view('admin.members.index', compact(
             'members',
             'totalMembers',
             'inactiveCount',
             'activeCount',
-            'batches'
+            'batches',
+            'majors',
+            'classes'
         ));
     }
 

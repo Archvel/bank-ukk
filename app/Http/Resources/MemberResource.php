@@ -17,7 +17,13 @@ class MemberResource extends JsonResource
         return [
             'id' => $this->id,
             'user_id' => $this->user_id,
+            'nis' => $this->nis,
+            'absen' => $this->absen,
             'student_name' => $this->student_name,
+            'class_name' => $this->class_name,
+            'major' => $this->major,
+            'academic_year' => $this->academic_year,
+            'gender' => $this->gender,
             'graduation_year' => $this->graduation_year,
             'account_status' => $this->account_status?->value ?? (string) $this->account_status,
             'user' => new UserResource($this->whenLoaded('user')),

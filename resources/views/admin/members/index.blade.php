@@ -81,14 +81,34 @@
 
         <!-- Filter & Search Bar -->
         <div class="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-xs mb-6">
-            <form method="GET" action="{{ route('admin.members.index') }}" class="flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div class="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+            <form method="GET" action="{{ route('admin.members.index') }}" class="flex flex-col lg:flex-row items-center justify-between gap-4">
+                <div class="flex flex-wrap items-center gap-2.5 w-full lg:w-auto">
                     <!-- Status Filter -->
                     <select name="status" onchange="this.form.submit()" class="text-xs rounded-xl border-slate-200 bg-slate-50 font-medium text-slate-700 py-2 px-3 focus:border-emerald-500 focus:ring-emerald-500">
                         <option value="">Semua Status</option>
                         <option value="inactive" {{ request('status') === 'inactive' ? 'selected' : '' }}>Menunggu Aktivasi (Inactive)</option>
                         <option value="active" {{ request('status') === 'active' ? 'selected' : '' }}>Aktif (Saver Terbit)</option>
                     </select>
+
+                    <!-- Jurusan Filter -->
+                    @if(isset($majors) && count($majors) > 0)
+                        <select name="major" onchange="this.form.submit()" class="text-xs rounded-xl border-slate-200 bg-slate-50 font-medium text-slate-700 py-2 px-3 focus:border-emerald-500 focus:ring-emerald-500">
+                            <option value="">Semua Jurusan</option>
+                            @foreach($majors as $m)
+                                <option value="{{ $m }}" {{ request('major') == $m ? 'selected' : '' }}>Jurusan {{ $m }}</option>
+                            @endforeach
+                        </select>
+                    @endif
+
+                    <!-- Kelas Filter -->
+                    @if(isset($classes) && count($classes) > 0)
+                        <select name="class" onchange="this.form.submit()" class="text-xs rounded-xl border-slate-200 bg-slate-50 font-medium text-slate-700 py-2 px-3 focus:border-emerald-500 focus:ring-emerald-500">
+                            <option value="">Semua Kelas</option>
+                            @foreach($classes as $c)
+                                <option value="{{ $c }}" {{ request('class') == $c ? 'selected' : '' }}>{{ $c }}</option>
+                            @endforeach
+                        </select>
+                    @endif
 
                     <!-- Batch / Year Filter -->
                     <select name="year" onchange="this.form.submit()" class="text-xs rounded-xl border-slate-200 bg-slate-50 font-medium text-slate-700 py-2 px-3 focus:border-emerald-500 focus:ring-emerald-500">
@@ -98,7 +118,7 @@
                         @endforeach
                     </select>
 
-                    @if(request()->filled('status') || request()->filled('year') || request()->filled('search'))
+                    @if(request()->filled('status') || request()->filled('major') || request()->filled('class') || request()->filled('year') || request()->filled('search'))
                         <a href="{{ route('admin.members.index') }}" class="text-xs text-slate-500 hover:text-red-600 font-medium flex items-center gap-1">
                             <span class="material-symbols-outlined text-[16px]">close</span> Reset
                         </a>
@@ -106,12 +126,12 @@
                 </div>
 
                 <!-- Search Input -->
-                <div class="relative w-full sm:w-80">
+                <div class="relative w-full lg:w-80">
                     <span class="material-symbols-outlined text-slate-400 absolute left-3 top-2.5 text-[18px]">search</span>
                     <input type="text" 
                            name="search" 
                            value="{{ request('search') }}" 
-                           placeholder="Cari nama siswa, angkatan, email..." 
+                           placeholder="Cari NIS, nama, kelas, jurusan..." 
                            class="w-full pl-9 pr-4 py-2 text-xs rounded-xl border-slate-200 bg-slate-50 placeholder-slate-400 focus:border-emerald-500 focus:ring-emerald-500">
                 </div>
             </form>
@@ -123,9 +143,10 @@
                 <table class="w-full text-left text-xs">
                     <thead>
                         <tr class="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold uppercase tracking-wider">
-                            <th class="py-3 px-4">Nama Siswa</th>
-                            <th class="py-3 px-4">Kontak & Akun Siswa</th>
-                            <th class="py-3 px-4">Tahun Angkatan</th>
+                            <th class="py-3 px-4">Siswa</th>
+                            <th class="py-3 px-4">Kelas & Jurusan</th>
+                            <th class="py-3 px-4">Akun & Kontak</th>
+                            <th class="py-3 px-4">Tahun Pelajaran</th>
                             <th class="py-3 px-4 text-center">Status Aktivasi</th>
                             <th class="py-3 px-4">No. Rekening Saver</th>
                             <th class="py-3 px-4 text-right">Aksi</th>
@@ -141,17 +162,32 @@
                                         </div>
                                         <div>
                                             <p class="font-bold text-slate-900">{{ $member->student_name }}</p>
-                                            <p class="text-[11px] text-slate-400">ID Member #MB-{{ str_pad($member->id, 4, '0', STR_PAD_LEFT) }}</p>
+                                            <div class="flex items-center gap-2 mt-0.5">
+                                                @if($member->nis)
+                                                    <span class="text-[11px] font-mono text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded font-semibold">NIS: {{ $member->nis }}</span>
+                                                @endif
+                                                @if($member->absen)
+                                                    <span class="text-[11px] text-slate-400">Absen #{{ $member->absen }}</span>
+                                                @endif
+                                            </div>
                                         </div>
                                     </div>
                                 </td>
                                 <td class="py-3 px-4">
-                                    <p class="text-slate-700">{{ $member->user?->email ?? '-' }}</p>
-                                    <p class="text-[11px] text-slate-400 font-mono">{{ $member->user?->phone_number ?? '-' }}</p>
+                                    @if($member->class_name)
+                                        <span class="font-bold text-slate-800 text-xs">{{ $member->class_name }}</span>
+                                        <p class="text-[11px] text-slate-400 font-semibold">{{ $member->major ?? '-' }}</p>
+                                    @else
+                                        <span class="text-slate-400 italic">-</span>
+                                    @endif
                                 </td>
                                 <td class="py-3 px-4">
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-lg bg-slate-100 text-slate-700 font-semibold text-[11px]">
-                                        Tahun {{ $member->graduation_year }}
+                                    <p class="text-slate-700 font-mono text-[11px]">{{ $member->user?->email ?? '-' }}</p>
+                                    <p class="text-[11px] text-slate-400 font-mono">User: {{ $member->user?->username ?? '-' }}</p>
+                                </td>
+                                <td class="py-3 px-4">
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-lg bg-slate-100 text-slate-700 font-semibold text-[11px]">
+                                        {{ $member->academic_year ?? ('Tahun '.$member->graduation_year) }}
                                     </span>
                                 </td>
                                 <td class="py-3 px-4 text-center">

@@ -10,7 +10,18 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
-#[Fillable(['user_id', 'student_name', 'graduation_year', 'account_status'])]
+#[Fillable([
+    'user_id',
+    'nis',
+    'absen',
+    'student_name',
+    'class_name',
+    'major',
+    'academic_year',
+    'gender',
+    'graduation_year',
+    'account_status',
+])]
 class Member extends Model
 {
     use HasFactory;

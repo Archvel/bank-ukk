@@ -72,18 +72,12 @@
                 </div>
                 <div class="flex items-center gap-2">
                     <span class="font-headline font-bold text-lg text-white tracking-tight">Bank Mini</span>
-                    <span
-                        class="hidden sm:inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold tracking-wider bg-slate-900 text-emerald-400 border border-slate-800">
-                        SMK VOKASI
-                    </span>
                 </div>
             </a>
 
             <!-- Navigation Links -->
             <nav class="hidden md:flex items-center gap-8 text-sm font-medium">
-                <a href="#fitur" class="text-slate-300 hover:text-emerald-400 transition-colors">Fitur Unggulan</a>
-                <a href="#alur" class="text-slate-300 hover:text-emerald-400 transition-colors">Alur Rekening</a>
-                <a href="#mobile" class="text-slate-300 hover:text-emerald-400 transition-colors">Aplikasi Mobile</a>
+                <a href="#fitur" class="text-slate-300 hover:text-emerald-400 transition-colors">Fitur Layanan</a>
                 <a href="#faq" class="text-slate-300 hover:text-emerald-400 transition-colors">FAQ</a>
             </nav>
 
@@ -112,7 +106,7 @@
                 @else
                     <a href="{{ route('login') }}"
                         class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-100 border border-slate-800 hover:border-emerald-500/50 transition-all duration-150 text-sm font-medium group">
-                        <span>Login Petugas (Web)</span>
+                        <span>Login</span>
                         <svg class="w-4 h-4 text-emerald-400 group-hover:translate-x-0.5 transition-transform" fill="none"
                             stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -135,24 +129,6 @@
             </div>
 
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-                <!-- Pill Badge -->
-                <div class="flex justify-center mb-6">
-                    <div
-                        class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-900/90 border border-slate-800 shadow-sm">
-                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                        <span class="text-xs font-medium text-slate-200">Sistem Perbankan Mini Sekolah
-                            Terintegrasi</span>
-                        <span class="text-slate-600">|</span>
-                        <span class="text-xs text-emerald-400 font-semibold flex items-center gap-1">
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            Standar Akuntansi SMK
-                        </span>
-                    </div>
-                </div>
-
                 <!-- Headline & Subtitle -->
                 <div class="max-w-4xl mx-auto text-center mb-10">
                     <h1
@@ -196,7 +172,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                         </svg>
-                        <span>Login Petugas (Web)</span>
+                        <span>Login</span>
                     </a>
                 </div>
             </div>
@@ -225,8 +201,8 @@
 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <!-- Bento Card 1: Aplikasi Mobile Saver -->
-                    <div class="rounded-2xl bg-slate-900 border border-slate-800 p-6 flex flex-col justify-between hover:border-emerald-500/40 transition-all duration-300 specular-top-edge shadow-xl"
-                        id="mobile">
+                    <div
+                        class="rounded-2xl bg-slate-900 border border-slate-800 p-6 flex flex-col justify-between hover:border-emerald-500/40 transition-all duration-300 specular-top-edge shadow-xl">
                         <div>
                             <div
                                 class="w-12 h-12 rounded-xl bg-slate-800/80 border border-slate-700/60 flex items-center justify-center text-emerald-400 mb-6">
@@ -236,7 +212,7 @@
                                 </svg>
                             </div>
                             <h3 class="text-xl font-headline font-bold text-white mb-2">Aplikasi Mobile Khusus Nasabah
-                                (Saver)</h3>
+                            </h3>
                             <p class="text-sm text-slate-400 mb-6 leading-relaxed">
                                 Aplikasi mobile mandiri khusus siswa penabung (<span
                                     class="text-emerald-400 font-mono">saver</span>) untuk memantau tabungan sekolah
@@ -297,8 +273,8 @@
                     </div>
 
                     <!-- Bento Card 2: Alur Aktivasi Rekening Otomatis & Saldo Mengendap -->
-                    <div class="rounded-2xl bg-slate-900 border border-slate-800 p-6 flex flex-col justify-between hover:border-emerald-500/40 transition-all duration-300 specular-top-edge shadow-xl"
-                        id="alur">
+                    <div
+                        class="rounded-2xl bg-slate-900 border border-slate-800 p-6 flex flex-col justify-between hover:border-emerald-500/40 transition-all duration-300 specular-top-edge shadow-xl">
                         <div>
                             <div
                                 class="w-12 h-12 rounded-xl bg-slate-800/80 border border-slate-700/60 flex items-center justify-center text-emerald-400 mb-6">
@@ -599,20 +575,13 @@
                     &copy; 2026 Bank Mini Sekolah. Platform Perbankan Edukasi &amp; Rekening Siswa
                     Terintegrasi.
                 </p>
-                <div
-                    class="flex items-center justify-center md:justify-start gap-2 text-xs text-emerald-400 pt-1 font-medium">
-                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                    <span>Sistem Informasi Bank Mini Sekolah Aktif</span>
-                </div>
             </div>
 
             <div class="flex flex-wrap justify-center items-center gap-x-6 gap-y-2 text-xs text-slate-400 font-medium">
                 <a href="#fitur" class="hover:text-emerald-400 transition-colors">Fitur Layanan</a>
-                <a href="#alur" class="hover:text-emerald-400 transition-colors">Alur Tabungan</a>
-                <a href="#mobile" class="hover:text-emerald-400 transition-colors">Aplikasi Mobile</a>
                 <a href="#faq" class="hover:text-emerald-400 transition-colors">FAQ</a>
                 <a href="{{ route('login') }}"
-                    class="text-emerald-400 hover:text-emerald-300 transition-colors font-semibold">Login Petugas</a>
+                    class="text-emerald-400 hover:text-emerald-300 transition-colors font-semibold">Login</a>
             </div>
         </div>
     </footer>
@@ -653,7 +622,7 @@
                     <span class="text-xs font-mono text-slate-400">Flutter Mobile Engine</span>
                 </div>
                 <h3 class="text-lg font-headline font-bold text-white">
-                    Aplikasi Mobile (Saver) Sedang Tahap Final
+                    Aplikasi Mobile (Nasabah) Sedang Tahap Final
                 </h3>
                 <p class="text-sm text-slate-300 leading-relaxed">
                     Aplikasi Mobile Bank Mini khusus Nasabah sedang dalam tahap pengembangan akhir. Silakan

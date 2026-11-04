@@ -74,14 +74,6 @@
                         </div>
                     </div>
 
-                    <!-- Branch Indicator Badge -->
-                    <div class="mt-4 flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-slate-800/80 border border-slate-700/60 text-xs">
-                        <span class="relative flex h-2 w-2">
-                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                            <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                        </span>
-                        <span class="text-slate-300 font-medium">Cabang Utama Kampus 1</span>
-                    </div>
                 </div>
 
                 <!-- Navigation Section -->
@@ -170,7 +162,8 @@
                         @csrf
                         <button type="submit" 
                                 title="Keluar dari Sistem"
-                                class="p-2 rounded-lg text-slate-400 hover:text-red-400 hover:bg-slate-800 transition">
+                                class="p-2 rounded-lg text-slate-400 hover:text-red-400 hover:bg-slate-800 transition"
+                                onclick="return confirm('Apakah Anda yakin ingin keluar dari sistem?')">
                             <span class="material-symbols-outlined text-[20px]">logout</span>
                         </button>
                     </form>
@@ -203,12 +196,6 @@
 
                 <!-- Right Utility Bar -->
                 <div class="flex items-center gap-4">
-                    <!-- Real-Time Sync Indicator -->
-                    <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-xs font-semibold text-emerald-700">
-                        <span class="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                        <span>Real-Time Sync: Aktif</span>
-                    </div>
-
                     <!-- Date Badge -->
                     <div class="hidden md:flex items-center gap-2 text-xs text-slate-500 font-medium bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200">
                         <span class="material-symbols-outlined text-[16px] text-slate-400">calendar_today</span>

@@ -151,7 +151,8 @@ class CounterController extends Controller
         $member = Member::with('user')
             ->where('account_status', MemberAccountStatus::Inactive)
             ->where(function ($q) use ($code) {
-                $q->where('student_name', 'like', "%{$code}%")
+                $q->where('nis', $code)
+                    ->orWhere('student_name', 'like', "%{$code}%")
                     ->orWhere('id', $code)
                     ->orWhereHas('user', function ($uq) use ($code) {
                         $uq->where('name', 'like', "%{$code}%")
@@ -168,6 +169,11 @@ class CounterController extends Controller
                 'member' => [
                     'id' => $member->id,
                     'student_name' => $member->student_name,
+                    'nis' => $member->nis,
+                    'class_name' => $member->class_name,
+                    'major' => $member->major,
+                    'absen' => $member->absen,
+                    'academic_year' => $member->academic_year,
                     'graduation_year' => $member->graduation_year,
                     'account_status' => $member->account_status->value,
                     'username' => $member->user?->username ?? '-',

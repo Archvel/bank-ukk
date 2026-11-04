@@ -30,10 +30,21 @@ class MemberController extends Controller
             $query->where('account_status', $request->string('status'));
         }
 
+        if ($request->filled('class')) {
+            $query->where('class_name', $request->string('class'));
+        }
+
+        if ($request->filled('major')) {
+            $query->where('major', $request->string('major'));
+        }
+
         if ($request->filled('search')) {
             $search = $request->string('search');
             $query->where(function ($q) use ($search) {
                 $q->where('student_name', 'like', "%{$search}%")
+                    ->orWhere('nis', 'like', "%{$search}%")
+                    ->orWhere('class_name', 'like', "%{$search}%")
+                    ->orWhere('major', 'like', "%{$search}%")
                     ->orWhere('graduation_year', 'like', "%{$search}%")
                     ->orWhereHas('user', function ($uq) use ($search) {
                         $uq->where('email', 'like', "%{$search}%")
