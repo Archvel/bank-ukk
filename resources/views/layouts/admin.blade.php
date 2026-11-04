@@ -27,6 +27,20 @@
             body { background: white !important; color: black !important; }
             .print-shadow-none { box-shadow: none !important; border: 1px solid #ccc !important; }
         }
+        /* Custom subtle scrollbar for fixed dark sidebar */
+        .sidebar-scroll::-webkit-scrollbar {
+            width: 5px;
+        }
+        .sidebar-scroll::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .sidebar-scroll::-webkit-scrollbar-thumb {
+            background: rgba(148, 163, 184, 0.2);
+            border-radius: 9999px;
+        }
+        .sidebar-scroll::-webkit-scrollbar-thumb:hover {
+            background: rgba(148, 163, 184, 0.4);
+        }
     </style>
 </head>
 <body class="h-full font-sans antialiased text-slate-800 bg-[#F9FAFB]" x-data="{ sidebarOpen: false }">
@@ -43,11 +57,11 @@
              @click="sidebarOpen = false" 
              x-cloak></div>
 
-        <!-- Left Command Rail / Sidebar (260px Slate #0F172A) -->
+        <!-- Left Command Rail / Sidebar (Fixed 260px Slate #0F172A) -->
         <aside :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'"
-               class="fixed inset-y-0 left-0 z-50 w-64 bg-[#0F172A] text-slate-300 transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0 flex flex-col justify-between shrink-0 shadow-xl border-r border-slate-800 no-print">
+               class="fixed inset-y-0 left-0 z-50 lg:z-40 w-64 bg-[#0F172A] text-slate-300 transition-transform duration-300 ease-in-out lg:translate-x-0 flex flex-col justify-between shrink-0 shadow-xl border-r border-slate-800 no-print">
             
-            <div class="flex flex-col flex-1 overflow-y-auto">
+            <div class="flex flex-col flex-1 overflow-y-auto sidebar-scroll">
                 <!-- Brand Header -->
                 <div class="p-5 border-b border-slate-800/80">
                     <div class="flex items-center gap-3">
@@ -165,7 +179,7 @@
         </aside>
 
         <!-- Main Viewport Area -->
-        <div class="flex-1 flex flex-col min-w-0 overflow-y-auto">
+        <div class="flex-1 flex flex-col min-w-0 lg:pl-64 print:pl-0">
             <!-- Top Header Bar -->
             <header class="bg-white border-b border-slate-200/80 sticky top-0 z-30 px-6 py-3.5 flex items-center justify-between shadow-xs no-print">
                 <div class="flex items-center gap-4">

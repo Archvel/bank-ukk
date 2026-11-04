@@ -84,11 +84,13 @@ class AuthenticationTest extends TestCase
         $response->assertRedirect(route('admin.dashboard', absolute: false));
     }
 
-    public function test_guest_accessing_home_is_redirected_to_login(): void
+    public function test_guest_accessing_home_sees_landing_page(): void
     {
         $response = $this->get('/');
 
-        $response->assertRedirect(route('login'));
+        $response->assertStatus(200);
+        $response->assertSee('E-Teller Bank Mini');
+        $response->assertSee('Download Aplikasi Nasabah (.APK)');
     }
 
     public function test_authenticated_admin_visiting_home_or_login_is_redirected_to_admin_dashboard(): void

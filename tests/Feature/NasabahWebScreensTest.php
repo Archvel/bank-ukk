@@ -3,13 +3,17 @@
 namespace Tests\Feature;
 
 use App\Actions\DepositAction;
+use App\Actions\SetOpeningCashAction;
 use App\Actions\WithdrawAction;
+use App\Enums\CashClosureStatus;
 use App\Enums\MemberAccountStatus;
 use App\Enums\Role;
+use App\Models\CashClosure;
 use App\Models\Member;
 use App\Models\PinResetRequest;
 use App\Models\Saver;
 use App\Models\User;
+use Carbon\Carbon;
 use Database\Seeders\AccountSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
@@ -298,5 +302,84 @@ class NasabahWebScreensTest extends TestCase
         ]);
 
         $response->assertRedirect(route('nasabah.dashboard', absolute: false));
+    }
+
+    public function test_nasabah_sees_loket_belum_buka_when_teller_has_not_started_session(): void
+    {
+        // Travel to 08:30 WIB (inside operating hours 07:00 - 15:30 WIB)
+        Carbon::setTestNow(Carbon::parse('2026-11-03 08:30:00', SetOpeningCashAction::TIMEZONE));
+
+        $response = $this->actingAs($this->nasabahAktif)->get(route('nasabah.dashboard'));
+
+        $response->assertOk()
+            ->assertSee('LOKET BELUM MEMULAI SESI')
+            ->assertSee('Menunggu Kas Awal Teller')
+            ->assertSee('Petugas loket belum menginput kas awal')
+            ->assertSee('07:00 - 15:30 WIB');
+    }
+
+    public function test_nasabah_sees_loket_buka_when_teller_has_started_session(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-11-03 08:30:00', SetOpeningCashAction::TIMEZONE));
+
+        // Teller starts session with opening cash
+        CashClosure::create([
+            'teller_id' => $this->teller->id,
+            'closure_date' => Carbon::now(SetOpeningCashAction::TIMEZONE)->startOfDay(),
+            'opening_balance' => 500000,
+            'status' => CashClosureStatus::Draft,
+            'notes' => 'Kas awal loket 01',
+        ]);
+
+        $response = $this->actingAs($this->nasabahAktif)->get(route('nasabah.dashboard'));
+
+        $response->assertOk()
+            ->assertSee('LOKET BUKA (SESI AKTIF)')
+            ->assertSee('Piket Teller')
+            ->assertSee('Loket Bank Mini sedang aktif melayani transaksi siswa');
+    }
+
+    public function test_nasabah_sees_loket_tutup_when_session_is_closed(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-11-03 14:00:00', SetOpeningCashAction::TIMEZONE));
+
+        // Cash closure submitted/approved
+        CashClosure::create([
+            'teller_id' => $this->teller->id,
+            'closure_date' => Carbon::now(SetOpeningCashAction::TIMEZONE)->startOfDay(),
+            'opening_balance' => 500000,
+            'status' => CashClosureStatus::Submitted,
+            'total_cash_expected' => 500000,
+            'actual_cash_counted' => 500000,
+            'difference' => 0,
+        ]);
+
+        $response = $this->actingAs($this->nasabahAktif)->get(route('nasabah.dashboard'));
+
+        $response->assertOk()
+            ->assertSee('LOKET TUTUP')
+            ->assertSee('Layanan loket hari ini telah berakhir');
+    }
+
+    public function test_nasabah_can_check_counter_status_via_api(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-11-03 09:00:00', SetOpeningCashAction::TIMEZONE));
+
+        CashClosure::create([
+            'teller_id' => $this->teller->id,
+            'closure_date' => Carbon::now(SetOpeningCashAction::TIMEZONE)->startOfDay(),
+            'opening_balance' => 300000,
+            'status' => CashClosureStatus::Draft,
+        ]);
+
+        $response = $this->actingAs($this->nasabahAktif, 'sanctum')->getJson('/api/nasabah/counter-status');
+
+        $response->assertOk()
+            ->assertJsonPath('status', 'success')
+            ->assertJsonPath('data.is_open', true)
+            ->assertJsonPath('data.has_active_session', true)
+            ->assertJsonPath('data.status_key', 'active')
+            ->assertJsonPath('data.operating_hours', '07:00 - 15:30 WIB')
+            ->assertJsonPath('data.active_tellers.0', 'Piket Teller');
     }
 }

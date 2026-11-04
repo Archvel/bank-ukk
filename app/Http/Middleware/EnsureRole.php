@@ -45,7 +45,10 @@ class EnsureRole
 
         $userRole = $user->role instanceof Role ? $user->role->value : (string) $user->role;
 
-        if (! in_array($userRole, $roles, true)) {
+        // Map 'saver' alias to 'nasabah'
+        $normalizedRoles = array_map(fn (string $r): string => $r === 'saver' ? 'nasabah' : $r, $roles);
+
+        if (! in_array($userRole, $normalizedRoles, true)) {
             if ($request->expectsJson()) {
                 return response()->json([
                     'message' => 'Akses ditolak. Anda tidak memiliki wewenang untuk mengakses endpoint ini.',

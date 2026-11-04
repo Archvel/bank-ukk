@@ -1,5 +1,106 @@
 <x-nasabah-layout title="Beranda & Kartu Rekening">
     <div class="max-w-6xl mx-auto px-4 sm:px-6 space-y-6" x-data="nasabahDashboard('{{ $qrCodeToken ?? '' }}')">
+
+        <!-- ======================================================== -->
+        <!-- LIVE STATUS LOKET / TELLER BANK MINI                     -->
+        <!-- ======================================================== -->
+        <div class="rounded-3xl p-5 sm:p-6 border transition-all shadow-xs
+            @if($tellerSessionStatus['is_open'] ?? false)
+                bg-gradient-to-r from-emerald-50 via-teal-50/60 to-white border-emerald-300 text-emerald-950
+            @elseif(($tellerSessionStatus['status_key'] ?? '') === 'not_started')
+                bg-gradient-to-r from-amber-50 via-orange-50/50 to-white border-amber-300 text-amber-950
+            @else
+                bg-gradient-to-r from-slate-50 via-gray-50 to-white border-slate-300 text-slate-800
+            @endif">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <!-- Left: Status Indicator & Info -->
+                <div class="flex items-start sm:items-center gap-4">
+                    <!-- Icon Box with Live Status Badge -->
+                    <div class="w-13 h-13 rounded-2xl flex items-center justify-center shrink-0 shadow-sm
+                        @if($tellerSessionStatus['is_open'] ?? false)
+                            bg-emerald-600 text-white shadow-emerald-700/20
+                        @elseif(($tellerSessionStatus['status_key'] ?? '') === 'not_started')
+                            bg-amber-500 text-white shadow-amber-600/20
+                        @else
+                            bg-slate-600 text-white shadow-slate-600/20
+                        @endif">
+                        <span class="material-symbols-outlined text-2xl">
+                            @if($tellerSessionStatus['is_open'] ?? false)
+                                storefront
+                            @elseif(($tellerSessionStatus['status_key'] ?? '') === 'not_started')
+                                hourglass_top
+                            @else
+                                door_front
+                            @endif
+                        </span>
+                    </div>
+
+                    <div class="space-y-1">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <!-- Live Pulsing Badge -->
+                            @if($tellerSessionStatus['is_open'] ?? false)
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-900 border border-emerald-300">
+                                    <span class="relative flex h-2 w-2">
+                                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                        <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                                    </span>
+                                    <span>LOKET BUKA (SESI AKTIF)</span>
+                                </span>
+                            @elseif(($tellerSessionStatus['status_key'] ?? '') === 'not_started')
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider bg-amber-100 text-amber-900 border border-amber-300">
+                                    <span class="h-2 w-2 rounded-full bg-amber-500"></span>
+                                    <span>LOKET BELUM MEMULAI SESI</span>
+                                </span>
+                            @else
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider bg-slate-200 text-slate-800 border border-slate-300">
+                                    <span class="h-2 w-2 rounded-full bg-slate-500"></span>
+                                    <span>LOKET TUTUP</span>
+                                </span>
+                            @endif
+
+                            <span class="text-xs font-bold text-slate-400 hidden sm:inline">•</span>
+                            <span class="text-xs font-semibold text-slate-600 flex items-center gap-1">
+                                <span class="material-symbols-outlined text-[15px] text-slate-400">schedule</span>
+                                Jam Operasional: <strong class="text-slate-900 font-mono">{{ $tellerSessionStatus['operating_hours'] ?? '07:00 - 15:30 WIB' }}</strong>
+                            </span>
+                        </div>
+
+                        <p class="text-xs sm:text-sm text-slate-700 leading-snug font-medium">
+                            {{ $tellerSessionStatus['message'] ?? 'Status loket teller Bank Mini.' }}
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Right: Active Teller Pills or Advice Note -->
+                <div class="shrink-0 flex flex-wrap items-center gap-2 pt-2 md:pt-0 border-t md:border-t-0 border-slate-200/60">
+                    @if($tellerSessionStatus['is_open'] ?? false)
+                        <div class="bg-white/85 backdrop-blur-xs px-3.5 py-2 rounded-xl border border-emerald-200 shadow-2xs flex items-center gap-2">
+                            <span class="material-symbols-outlined text-emerald-600 text-base">badge</span>
+                            <div class="text-left">
+                                <span class="block text-[10px] uppercase font-bold text-slate-400 leading-tight">Teller Melayani</span>
+                                <span class="block text-xs font-bold text-slate-900">{{ implode(', ', $tellerSessionStatus['active_tellers'] ?? []) ?: 'Petugas Piket' }}</span>
+                            </div>
+                        </div>
+                    @elseif(($tellerSessionStatus['status_key'] ?? '') === 'not_started')
+                        <div class="bg-white/85 backdrop-blur-xs px-3.5 py-2 rounded-xl border border-amber-200 shadow-2xs flex items-center gap-2">
+                            <span class="material-symbols-outlined text-amber-600 text-base">pending_actions</span>
+                            <div class="text-left">
+                                <span class="block text-[10px] uppercase font-bold text-slate-400 leading-tight">Status Sesi Loket</span>
+                                <span class="block text-xs font-bold text-amber-900">Menunggu Kas Awal Teller</span>
+                            </div>
+                        </div>
+                    @else
+                        <div class="bg-white/85 backdrop-blur-xs px-3.5 py-2 rounded-xl border border-slate-200 shadow-2xs flex items-center gap-2">
+                            <span class="material-symbols-outlined text-slate-500 text-base">lock_clock</span>
+                            <div class="text-left">
+                                <span class="block text-[10px] uppercase font-bold text-slate-400 leading-tight">Jadwal Loket</span>
+                                <span class="block text-xs font-bold text-slate-800">Buka Esok Pukul 07:00 WIB</span>
+                            </div>
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </div>
         
         @if($saver)
             <!-- ======================================================== -->
@@ -114,7 +215,21 @@
                             <span class="material-symbols-outlined text-xs">qr_code_scanner</span>
                             <span>ID SCANNER TELLER</span>
                         </span>
-                        <span class="text-[10px] text-slate-400 font-bold">LOKET 01 - 03</span>
+                        @if($tellerSessionStatus['is_open'] ?? false)
+                            <span class="inline-flex items-center gap-1 text-[10px] text-emerald-700 font-bold bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>
+                                <span>Loket Buka</span>
+                            </span>
+                        @elseif(($tellerSessionStatus['status_key'] ?? '') === 'not_started')
+                            <span class="inline-flex items-center gap-1 text-[10px] text-amber-800 font-bold bg-amber-50 px-2.5 py-0.5 rounded-full border border-amber-200">
+                                <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                                <span>Belum Mulai</span>
+                            </span>
+                        @else
+                            <span class="inline-flex items-center gap-1 text-[10px] text-slate-500 font-bold bg-slate-100 px-2.5 py-0.5 rounded-full border border-slate-200">
+                                <span>Tutup</span>
+                            </span>
+                        @endif
                     </div>
 
                     <!-- QR Code Render Container -->
@@ -129,9 +244,22 @@
 
                     <!-- Subtext & Action -->
                     <div class="w-full space-y-3">
-                        <p class="text-xs text-slate-500 leading-relaxed">
-                            Tunjukkan QR code ini ke scanner loket Teller untuk setor atau tarik tunai instan.
-                        </p>
+                        @if($tellerSessionStatus['is_open'] ?? false)
+                            <p class="text-xs text-emerald-800 font-medium leading-relaxed bg-emerald-50/70 p-2.5 rounded-xl border border-emerald-100 text-left">
+                                <span class="material-symbols-outlined text-sm align-middle text-emerald-600 mr-1">check_circle</span>
+                                Loket sedang aktif melayani. Tunjukkan QR code ini ke scanner loket Teller untuk setor atau tarik tunai instan.
+                            </p>
+                        @elseif(($tellerSessionStatus['status_key'] ?? '') === 'not_started')
+                            <p class="text-xs text-amber-800 font-medium leading-relaxed bg-amber-50/70 p-2.5 rounded-xl border border-amber-200 text-left">
+                                <span class="material-symbols-outlined text-sm align-middle text-amber-600 mr-1">hourglass_top</span>
+                                Teller belum memulai sesi. Anda dapat menyiapkan QR code ini terlebih dahulu sebelum loket dibuka.
+                            </p>
+                        @else
+                            <p class="text-xs text-slate-600 leading-relaxed bg-slate-50 p-2.5 rounded-xl border border-slate-200 text-left">
+                                <span class="material-symbols-outlined text-sm align-middle text-slate-400 mr-1">info</span>
+                                Sesi loket telah selesai hari ini. QR code ini tetap berlaku untuk transaksi pada jam operasional esok hari.
+                            </p>
+                        @endif
                         <button type="button" 
                                 @click="showQrModal = true" 
                                 class="w-full py-2.5 px-4 rounded-xl text-xs font-bold bg-[#0F172A] hover:bg-slate-800 text-white shadow-xs flex items-center justify-center gap-2 transition active:scale-98">
@@ -290,12 +418,29 @@
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <!-- Langkah 1 -->
                         <div class="p-5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-3">
-                            <div class="w-9 h-9 rounded-xl bg-[#059669] text-white flex items-center justify-center font-bold text-sm shadow-xs">
-                                1
+                            <div class="flex items-center justify-between">
+                                <div class="w-9 h-9 rounded-xl bg-[#059669] text-white flex items-center justify-center font-bold text-sm shadow-xs">
+                                    1
+                                </div>
+                                @if($tellerSessionStatus['is_open'] ?? false)
+                                    <span class="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>
+                                        <span>Loket Buka Sekarang</span>
+                                    </span>
+                                @elseif(($tellerSessionStatus['status_key'] ?? '') === 'not_started')
+                                    <span class="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-300">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                                        <span>Belum Buka</span>
+                                    </span>
+                                @else
+                                    <span class="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-slate-200 text-slate-700">
+                                        <span>Tutup</span>
+                                    </span>
+                                @endif
                             </div>
                             <h5 class="font-bold text-sm text-slate-900">Kunjungi Loket Teller</h5>
                             <p class="text-xs text-slate-600 leading-relaxed">
-                                Datang ke Loket 01 - 03 Bank Mini SMKN 1 pada jam operasional loket sekolah dengan membawa kartu pelajar / menyebutkan nama Anda.
+                                Datang ke Loket 01 - 03 Bank Mini SMKN 1 pada jam operasional ({{ $tellerSessionStatus['operating_hours'] ?? '07:00 - 15:30 WIB' }}) dengan membawa kartu pelajar / menyebutkan nama Anda.
                             </p>
                         </div>
 

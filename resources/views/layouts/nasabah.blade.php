@@ -74,18 +74,39 @@
             </nav>
 
             <!-- Right: Status Badge & Student Profile -->
-            <div class="flex items-center gap-3 shrink-0">
-                <!-- Account Status Badge -->
-                @if($hasActiveAccount)
-                    <div class="hidden sm:flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 text-emerald-800 px-3 py-1.5 rounded-full text-[11px] font-bold">
+            <div class="flex items-center gap-2 sm:gap-3 shrink-0">
+                <!-- Loket Teller Session Status Badge -->
+                @if($tellerSessionStatus['is_open'] ?? false)
+                    <div class="flex items-center gap-1.5 bg-emerald-50 border border-emerald-300 text-emerald-800 px-3 py-1.5 rounded-full text-[11px] font-bold shadow-2xs"
+                         title="Loket Teller sedang aktif melayani (Jam Operasional: {{ $tellerSessionStatus['operating_hours'] ?? '07:00 - 15:30 WIB' }})">
                         <span class="relative flex h-2 w-2">
                             <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                             <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                         </span>
+                        <span>LOKET BUKA</span>
+                    </div>
+                @elseif(($tellerSessionStatus['status_key'] ?? '') === 'not_started')
+                    <div class="flex items-center gap-1.5 bg-amber-50 border border-amber-300 text-amber-800 px-3 py-1.5 rounded-full text-[11px] font-bold"
+                         title="Teller belum memulai sesi loket (Jam buka: 07:00 - 15:30 WIB)">
+                        <span class="h-2 w-2 rounded-full bg-amber-500"></span>
+                        <span>LOKET BELUM BUKA</span>
+                    </div>
+                @else
+                    <div class="flex items-center gap-1.5 bg-slate-100 border border-slate-300 text-slate-600 px-3 py-1.5 rounded-full text-[11px] font-bold"
+                         title="Sesi layanan loket teller telah selesai / tutup (Jam operasional: 07:00 - 15:30 WIB)">
+                        <span class="h-2 w-2 rounded-full bg-slate-400"></span>
+                        <span>LOKET TUTUP</span>
+                    </div>
+                @endif
+
+                <!-- Account Status Badge -->
+                @if($hasActiveAccount)
+                    <div class="hidden md:flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 text-emerald-800 px-3 py-1.5 rounded-full text-[11px] font-bold">
+                        <span class="material-symbols-outlined text-sm text-emerald-600 fill">verified</span>
                         <span>REKENING AKTIF</span>
                     </div>
                 @else
-                    <div class="hidden sm:flex items-center gap-1.5 bg-amber-50 border border-amber-200 text-amber-800 px-3 py-1.5 rounded-full text-[11px] font-bold">
+                    <div class="hidden md:flex items-center gap-1.5 bg-amber-50 border border-amber-200 text-amber-800 px-3 py-1.5 rounded-full text-[11px] font-bold">
                         <span class="h-2 w-2 rounded-full bg-amber-500"></span>
                         <span>CALON NASABAH</span>
                     </div>

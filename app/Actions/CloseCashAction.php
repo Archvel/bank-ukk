@@ -16,14 +16,22 @@ class CloseCashAction
     {
         $today = today();
 
-        // Get opening balance from previous day's approved closure, or default to 0
-        $previousApprovedClosure = CashClosure::where('teller_id', $teller->id)
-            ->where('closure_date', '<', $today)
-            ->where('status', CashClosureStatus::Approved)
-            ->orderByDesc('closure_date')
+        $todayClosure = CashClosure::where('teller_id', $teller->id)
+            ->whereDate('closure_date', $today)
             ->first();
 
-        $openingBalance = $previousApprovedClosure ? (int) $previousApprovedClosure->physical_ending_balance : 0;
+        if ($todayClosure !== null) {
+            $openingBalance = (int) $todayClosure->opening_balance;
+        } else {
+            // Get opening balance from previous day's approved closure, or default to 0
+            $previousApprovedClosure = CashClosure::where('teller_id', $teller->id)
+                ->where('closure_date', '<', $today)
+                ->where('status', CashClosureStatus::Approved)
+                ->orderByDesc('closure_date')
+                ->first();
+
+            $openingBalance = $previousApprovedClosure ? (int) $previousApprovedClosure->physical_ending_balance : 0;
+        }
 
         $trxSummary = Transaction::where('teller_id', $teller->id)
             ->whereDate('created_at', $today)
@@ -52,7 +60,7 @@ class CloseCashAction
                 'physical_ending_balance' => $physicalEndingBalance,
                 'difference' => $difference,
                 'status' => CashClosureStatus::Submitted,
-                'notes' => $notes,
+                'notes' => $notes ?? $todayClosure?->notes,
             ]
         );
     }
@@ -60,19 +68,27 @@ class CloseCashAction
     /**
      * Preview calculation without persisting.
      *
-     * @return array<string, int>
+     * @return array<string, int|bool|string|null>
      */
     public function preview(User $teller): array
     {
         $today = today();
 
-        $previousApprovedClosure = CashClosure::where('teller_id', $teller->id)
-            ->where('closure_date', '<', $today)
-            ->where('status', CashClosureStatus::Approved)
-            ->orderByDesc('closure_date')
+        $todayClosure = CashClosure::where('teller_id', $teller->id)
+            ->whereDate('closure_date', $today)
             ->first();
 
-        $openingBalance = $previousApprovedClosure ? (int) $previousApprovedClosure->physical_ending_balance : 0;
+        if ($todayClosure !== null) {
+            $openingBalance = (int) $todayClosure->opening_balance;
+        } else {
+            $previousApprovedClosure = CashClosure::where('teller_id', $teller->id)
+                ->where('closure_date', '<', $today)
+                ->where('status', CashClosureStatus::Approved)
+                ->orderByDesc('closure_date')
+                ->first();
+
+            $openingBalance = $previousApprovedClosure ? (int) $previousApprovedClosure->physical_ending_balance : 0;
+        }
 
         $trxSummary = Transaction::where('teller_id', $teller->id)
             ->whereDate('created_at', $today)
@@ -92,6 +108,8 @@ class CloseCashAction
             'total_deposit' => $totalDeposit,
             'total_withdrawal' => $totalWithdrawal,
             'system_ending_balance' => $systemEndingBalance,
+            'has_session_opened' => ($todayClosure !== null),
+            'closure_status' => $todayClosure?->status?->value,
         ];
     }
 }

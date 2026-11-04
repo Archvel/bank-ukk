@@ -80,68 +80,113 @@
     </style>
 </head>
 
-<body class="h-full font-sans antialiased text-slate-800 bg-[#F9FAFB] select-none" x-data="{ currentDrawerBalance: {{ $drawerBalance ?? 0 }} }">
-    <!-- Top Header Bar (Sederhana & Bersih) -->
-    <header class="fixed top-0 left-0 right-0 h-[64px] bg-[#0F172A] border-b border-slate-800 z-50 text-white flex items-center justify-between px-6 no-print shadow-xs">
-        <!-- Kiri: Nama Bank Mini Sekolah -->
-        <div class="flex items-center gap-3">
-            <div class="w-9 h-9 rounded-xl bg-emerald-600 flex items-center justify-center text-white shadow-xs">
-                <span class="material-symbols-outlined text-[20px] fill">account_balance</span>
+<body class="h-full font-sans antialiased text-slate-800 bg-[#F9FAFB] select-none" 
+      x-data="{ currentDrawerBalance: {{ $drawerBalance ?? 0 }}, currentOpeningBalance: {{ $openingBalance ?? 0 }}, openKasAwalModal: false }"
+      @drawer-updated.window="currentDrawerBalance = $event.detail"
+      @opening-cash-updated.window="currentOpeningBalance = $event.detail.openingBalance; if($event.detail.drawerBalance !== undefined) currentDrawerBalance = $event.detail.drawerBalance"
+      @open-kas-awal-modal.window="openKasAwalModal = true">
+    <!-- Top Header Bar (Fixed 70px POS Head Bar) -->
+    <header class="fixed top-0 left-0 right-0 h-[70px] bg-[#0F172A] border-b border-slate-800 z-50 text-white flex items-center justify-between px-6 no-print shadow-md">
+        <!-- Left: Brand Logo & Station Badge -->
+        <div class="flex items-center gap-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center text-white shadow-md shadow-emerald-950/40">
+                    <span class="material-symbols-outlined text-2xl fill">account_balance</span>
+                </div>
+                <div>
+                    <h1 class="text-white font-extrabold text-base tracking-tight leading-none">BANK MINI SMKN 1</h1>
+                    <p class="text-[11px] text-emerald-400 font-mono tracking-wider mt-0.5">SISTEM E-TELLER POS</p>
+                </div>
             </div>
-            <span class="text-white font-bold text-base tracking-tight">Bank Mini Sekolah</span>
+
+            <div class="hidden sm:flex items-center gap-2 {{ ($isWithinOperatingHours ?? true) ? 'bg-emerald-950/80 border-emerald-500/40 text-emerald-400' : 'bg-amber-950/80 border-amber-500/40 text-amber-400' }} px-3 py-1 rounded-full text-xs font-semibold">
+                <span class="relative flex h-2 w-2">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full {{ ($isWithinOperatingHours ?? true) ? 'bg-emerald-400' : 'bg-amber-400' }} opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-2 w-2 {{ ($isWithinOperatingHours ?? true) ? 'bg-emerald-500' : 'bg-amber-500' }}"></span>
+                </span>
+                <span>LOKET 01 • {{ ($isWithinOperatingHours ?? true) ? 'AKTIF' : 'SELESAI/TUTUP' }} ({{ $operatingHoursLabel ?? '07:00 - 15:30 WIB' }})</span>
+            </div>
         </div>
 
-        <!-- Tengah: 3 Link Navigasi Bersih -->
-        <nav class="hidden md:flex items-center gap-1 bg-slate-800/60 p-1 rounded-xl border border-slate-700/50">
-            <!-- 1. Meja Layanan -->
+        <!-- Center: 3 Navigation Tabs -->
+        <nav class="hidden md:flex items-center gap-1.5 bg-slate-800/80 p-1.5 rounded-xl border border-slate-700/60">
+            <!-- 1. Meja Layanan Loket -->
             <a href="{{ route('teller.counter') }}"
-                class="flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-medium transition {{ request()->routeIs('teller.counter*') ? 'bg-[#059669] text-white shadow-xs font-semibold' : 'text-slate-300 hover:text-white hover:bg-slate-700/50' }}">
-                <span class="material-symbols-outlined text-[17px]">point_of_sale</span>
-                <span>Meja Layanan</span>
+                class="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all {{ request()->routeIs('teller.counter*') ? 'bg-[#059669] text-white shadow-sm' : 'text-slate-300 hover:text-white hover:bg-slate-700/60' }}">
+                <span class="material-symbols-outlined text-[18px]">point_of_sale</span>
+                <span>Meja Layanan Loket</span>
             </a>
 
-            <!-- 2. Riwayat Hari Ini -->
+            <!-- 2. Riwayat Transaksi Hari Ini -->
             <a href="{{ route('teller.transactions.index') }}"
-                class="flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-medium transition {{ request()->routeIs('teller.transactions.*') ? 'bg-[#059669] text-white shadow-xs font-semibold' : 'text-slate-300 hover:text-white hover:bg-slate-700/50' }}">
-                <span class="material-symbols-outlined text-[17px]">history</span>
-                <span>Riwayat Hari Ini</span>
+                class="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all {{ request()->routeIs('teller.transactions.*') ? 'bg-[#059669] text-white shadow-sm' : 'text-slate-300 hover:text-white hover:bg-slate-700/60' }}">
+                <span class="material-symbols-outlined text-[18px]">history</span>
+                <span>Riwayat Transaksi Hari Ini</span>
             </a>
 
-            <!-- 3. Penutupan Kas -->
+            <!-- 3. Penutupan Kas Harian -->
             <a href="{{ route('teller.cash-closure.index') }}"
-                class="flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-medium transition {{ request()->routeIs('teller.cash-closure.*') ? 'bg-[#059669] text-white shadow-xs font-semibold' : 'text-slate-300 hover:text-white hover:bg-slate-700/50' }}">
-                <span class="material-symbols-outlined text-[17px]">payments</span>
-                <span>Penutupan Kas</span>
+                class="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all {{ request()->routeIs('teller.cash-closure.*') ? 'bg-[#059669] text-white shadow-sm' : 'text-slate-300 hover:text-white hover:bg-slate-700/60' }}">
+                <span class="material-symbols-outlined text-[18px]">payments</span>
+                <span>Penutupan Kas Harian</span>
             </a>
         </nav>
 
-        <!-- Kanan: Kas Laci & Profil Petugas -->
-        <div class="flex items-center gap-4">
-            <!-- Kas Laci Ringkas -->
-            <div class="flex items-center gap-2 bg-slate-800/80 px-3 py-1.5 rounded-xl border border-slate-700/60 text-xs">
-                <span class="text-slate-400">Kas Laci:</span>
-                <span class="font-mono text-xs font-bold text-emerald-400 tabular-nums" x-text="'Rp ' + (new Intl.NumberFormat('id-ID').format(currentDrawerBalance))">
-                    Rp {{ number_format($drawerBalance ?? 0, 0, ',', '.') }}
-                </span>
+        <!-- Right: Status Widgets & Teller Persona -->
+        <div class="flex items-center gap-3">
+            <!-- Kas Awal Session Widget / Button -->
+            <button type="button" 
+                    @click="openKasAwalModal = true"
+                    title="{{ $hasOpenedSession ? 'Kas awal sesi aktif. Klik untuk lihat atau perbarui' : 'Sesi loket baru: Klik untuk input uang kas awal laci' }}"
+                    class="flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-semibold transition {{ $hasOpenedSession ? 'bg-slate-800/90 hover:bg-slate-700/80 border-slate-700/80 text-slate-200' : 'bg-amber-500/20 hover:bg-amber-500/30 border-amber-400/50 text-amber-300 ring-2 ring-amber-400/20 animate-pulse' }}">
+                <span class="material-symbols-outlined text-[19px] {{ $hasOpenedSession ? 'text-emerald-400' : 'text-amber-400' }}">savings</span>
+                <div class="flex flex-col text-left">
+                    <span class="text-[9px] uppercase tracking-wider leading-none {{ $hasOpenedSession ? 'text-slate-400' : 'text-amber-300 font-bold' }}">
+                        Kas Awal
+                    </span>
+                    <span class="font-mono text-xs font-bold tabular-nums" x-text="'Rp ' + (new Intl.NumberFormat('id-ID').format(currentOpeningBalance))">
+                        Rp {{ number_format($openingBalance ?? 0, 0, ',', '.') }}
+                    </span>
+                </div>
+            </button>
+
+            <!-- Real-Time Cash Drawer Balance Widget -->
+            <div class="flex items-center gap-2.5 bg-emerald-600/90 text-white px-3.5 py-1.5 rounded-xl border border-emerald-400/30 shadow-inner">
+                <span class="material-symbols-outlined text-[20px]">account_balance_wallet</span>
+                <div class="flex flex-col text-right">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-100 leading-none">Kas Laci</span>
+                    <span class="font-mono text-sm font-bold tabular-nums" x-text="'Rp ' + (new Intl.NumberFormat('id-ID').format(currentDrawerBalance))">
+                        Rp {{ number_format($drawerBalance ?? 0, 0, ',', '.') }}
+                    </span>
+                </div>
             </div>
 
-            <!-- Profil Petugas & Logout -->
+            <!-- Hardware Scanner Status -->
+            <div class="hidden lg:flex items-center gap-2 bg-slate-800/90 border border-slate-700/80 px-3 py-1.5 rounded-xl text-xs text-slate-300">
+                <span class="material-symbols-outlined text-emerald-400 text-[18px]">qr_code_scanner</span>
+                <span>Kamera QR: <strong class="text-emerald-400 font-semibold">Siap</strong></span>
+            </div>
+
+            <!-- Teller Profile & Logout -->
             <div class="flex items-center gap-3 pl-2 border-l border-slate-800">
-                <div class="flex items-center gap-2">
-                    <div class="w-7 h-7 rounded-full bg-emerald-700 border border-emerald-500/40 flex items-center justify-center text-white font-bold text-xs shrink-0">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-full bg-emerald-700 border border-emerald-500/40 flex items-center justify-center text-white font-bold text-xs shrink-0">
                         {{ strtoupper(substr(auth()->user()->name ?? 'TL', 0, 2)) }}
                     </div>
-                    <span class="hidden sm:block text-xs font-medium text-white truncate max-w-[130px]">{{ auth()->user()->name ?? 'Petugas Teller' }}</span>
+                    <div class="hidden xl:block text-left">
+                        <p class="text-xs font-bold text-white leading-tight truncate max-w-[120px]">{{ auth()->user()->name ?? 'Piket Teller' }}</p>
+                        <span class="text-[10px] text-slate-400 font-medium">Piket Teller 1</span>
+                    </div>
                 </div>
 
-                <!-- Tombol Logout -->
+                <!-- Logout Button -->
                 <form method="POST" action="{{ route('logout') }}" class="inline">
                     @csrf
                     <button type="submit"
-                        title="Keluar"
-                        class="p-1.5 rounded-lg text-slate-400 hover:text-red-400 hover:bg-slate-800 transition"
-                        onclick="return confirm('Apakah Anda yakin ingin keluar?')">
-                        <span class="material-symbols-outlined text-[18px]">logout</span>
+                        title="Keluar dari sesi kasir"
+                        class="p-2 rounded-xl text-slate-400 hover:text-red-400 hover:bg-slate-800 transition"
+                        onclick="return confirm('Apakah Anda yakin ingin keluar dari sesi loket teller?')">
+                        <span class="material-symbols-outlined text-[20px]">logout</span>
                     </button>
                 </form>
             </div>
@@ -187,6 +232,9 @@
     <main class="pt-[70px] min-h-screen">
         {{ $slot }}
     </main>
+
+    <!-- Global Kas Awal Modal Component -->
+    @include('teller.partials.kas-awal-modal')
 
     @stack('scripts')
 </body>

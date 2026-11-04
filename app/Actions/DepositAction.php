@@ -9,6 +9,7 @@ use App\Models\Saver;
 use App\Models\Transaction;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 
 class DepositAction
@@ -70,6 +71,15 @@ class DepositAction
                 throw ValidationException::withMessages([
                     'saver' => 'Akun penabung sedang tidak aktif atau terblokir.',
                 ]);
+            }
+
+            // Verify PIN for existing saver if provided
+            if ($member === null && $pin !== null) {
+                if (! Hash::check($pin, $lockedSaver->pin)) {
+                    throw ValidationException::withMessages([
+                        'pin' => 'Otorisasi gagal: PIN 6-digit keamanan nasabah tidak cocok.',
+                    ]);
+                }
             }
 
             $openingBalance = $lockedSaver->balance;

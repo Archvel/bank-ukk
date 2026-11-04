@@ -14,6 +14,7 @@ use App\Http\Controllers\Nasabah\PinController as NasabahPinController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Teller\CashClosureController as TellerCashClosureController;
 use App\Http\Controllers\Teller\CounterController as TellerCounterController;
+use App\Http\Controllers\Teller\OpeningCashController as TellerOpeningCashController;
 use App\Http\Controllers\Teller\TransactionHistoryController as TellerTransactionHistoryController;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -22,7 +23,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', function (Request $request) {
     if (! Auth::check()) {
-        return redirect()->route('login');
+        return view('landing');
     }
 
     /** @var User|null $user */
@@ -41,7 +42,7 @@ Route::get('/', function (Request $request) {
     }
 
     return redirect()->route('dashboard');
-});
+})->name('landing');
 
 Route::get('/dashboard', function (Request $request) {
     /** @var User|null $user */
@@ -118,6 +119,10 @@ Route::middleware(['auth', 'role:teller'])->prefix('teller')->name('teller.')->g
     Route::get('/cash-closure', [TellerCashClosureController::class, 'index'])->name('cash-closure.index');
     Route::get('/cash-closure/calculate', [TellerCashClosureController::class, 'calculate'])->name('cash-closure.calculate.web');
     Route::post('/cash-closure', [TellerCashClosureController::class, 'store'])->name('cash-closure.store');
+
+    // 4. Kas Awal Sesi Teller (Opening Cash)
+    Route::get('/opening-cash', [TellerOpeningCashController::class, 'show'])->name('opening-cash.show');
+    Route::post('/opening-cash', [TellerOpeningCashController::class, 'store'])->name('opening-cash.store');
 });
 
 // Nasabah / Siswa Web Routes

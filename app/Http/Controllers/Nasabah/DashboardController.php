@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Nasabah;
 
+use App\Actions\GetTellerSessionStatusAction;
 use App\Actions\WithdrawAction;
 use App\Http\Controllers\Controller;
 use App\Models\Member;
@@ -37,6 +38,7 @@ class DashboardController extends Controller
             : collect();
 
         $qrCodeToken = $saver ? ($saver->qr_code_token ?: 'QR-'.$saver->account_number) : null;
+        $tellerSessionStatus = app(GetTellerSessionStatusAction::class)->handle();
 
         return view('nasabah.dashboard', compact(
             'saver',
@@ -45,7 +47,8 @@ class DashboardController extends Controller
             'minMaintainingBalance',
             'withdrawableBalance',
             'recentMutations',
-            'qrCodeToken'
+            'qrCodeToken',
+            'tellerSessionStatus'
         ));
     }
 }

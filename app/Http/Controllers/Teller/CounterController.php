@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Teller;
 
 use App\Actions\CloseCashAction;
 use App\Actions\DepositAction;
+use App\Actions\SetOpeningCashAction;
 use App\Actions\WithdrawAction;
 use App\Enums\MemberAccountStatus;
 use App\Http\Controllers\Controller;
@@ -17,6 +18,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 
 class CounterController extends Controller
@@ -31,6 +33,10 @@ class CounterController extends Controller
         // Calculate real-time drawer balance
         $preview = $closeCashAction->preview($teller);
         $drawerBalance = (int) $preview['system_ending_balance'];
+        $openingBalance = (int) $preview['opening_balance'];
+        $hasOpenedSession = (bool) ($preview['has_session_opened'] ?? false);
+        $isWithinOperatingHours = app(SetOpeningCashAction::class)->isWithinOperatingHours();
+        $operatingHoursLabel = '07:00 - 15:30 WIB';
         $todayTrxCount = Transaction::where('teller_id', $teller->id)->whereDate('created_at', today())->count();
 
         $minMaintainingBalance = WithdrawAction::MINIMUM_MAINTAINING_BALANCE;
@@ -44,12 +50,32 @@ class CounterController extends Controller
             ->take(5)
             ->get();
 
+        // Inactive candidate members ready for initial deposit & account activation
+        $pendingMembers = Member::with('user')
+            ->where('account_status', MemberAccountStatus::Inactive)
+            ->latest('id')
+            ->take(15)
+            ->get();
+
+        // Active savers
+        $activeSavers = Saver::with(['user', 'member'])
+            ->where('status', 'active')
+            ->latest('id')
+            ->take(15)
+            ->get();
+
         return view('teller.counter.index', compact(
             'drawerBalance',
+            'openingBalance',
+            'hasOpenedSession',
+            'isWithinOperatingHours',
+            'operatingHoursLabel',
             'todayTrxCount',
             'minMaintainingBalance',
             'minInitialDeposit',
-            'recentTransactions'
+            'recentTransactions',
+            'pendingMembers',
+            'activeSavers'
         ));
     }
 
@@ -178,6 +204,13 @@ class CounterController extends Controller
             $saver = Saver::findOrFail($request->integer('saver_id'));
         } elseif ($request->filled('account_number')) {
             $saver = Saver::where('account_number', $request->string('account_number'))->firstOrFail();
+        }
+
+        // Web counter requires PIN verification for all saver transactions
+        if ($saver !== null && empty($pin)) {
+            throw ValidationException::withMessages([
+                'pin' => 'Otorisasi gagal: PIN 6-digit keamanan nasabah wajib dimasukkan.',
+            ]);
         }
 
         $transaction = $action->handle(

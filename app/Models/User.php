@@ -74,4 +74,9 @@ class User extends Authenticatable
     {
         return $this->role === Role::Nasabah;
     }
+
+    public function isSaver(): bool
+    {
+        return $this->isNasabah();
+    }
 }

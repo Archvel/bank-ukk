@@ -119,4 +119,50 @@ class WithdrawalAndPinVerificationTest extends TestCase
         $totalCredit = JournalEntry::where('type', JournalEntryType::Credit)->sum('amount');
         $this->assertSame($totalDebit, $totalCredit);
     }
+
+    public function test_deposit_at_counter_fails_when_pin_is_missing(): void
+    {
+        $response = $this->actingAs($this->teller)->postJson(route('teller.transactions.deposit.web'), [
+            'account_number' => $this->saver->account_number,
+            'amount' => 15000,
+        ]);
+
+        $response->assertUnprocessable()
+            ->assertJsonValidationErrors(['pin']);
+
+        $this->saver->refresh();
+        $this->assertSame(50000, $this->saver->balance);
+    }
+
+    public function test_deposit_fails_with_incorrect_pin(): void
+    {
+        $response = $this->actingAs($this->teller)->postJson(route('teller.transactions.deposit.web'), [
+            'account_number' => $this->saver->account_number,
+            'amount' => 15000,
+            'pin' => '999999', // wrong PIN
+        ]);
+
+        $response->assertUnprocessable()
+            ->assertJsonValidationErrors(['pin']);
+
+        $this->saver->refresh();
+        $this->assertSame(50000, $this->saver->balance);
+    }
+
+    public function test_deposit_succeeds_when_pin_is_correct(): void
+    {
+        $response = $this->actingAs($this->teller)->postJson(route('teller.transactions.deposit.web'), [
+            'account_number' => $this->saver->account_number,
+            'amount' => 25000,
+            'pin' => '123456', // correct PIN
+            'notes' => 'Setoran dengan PIN',
+        ]);
+
+        $response->assertCreated()
+            ->assertJsonPath('transaction.opening_balance', 50000)
+            ->assertJsonPath('transaction.closing_balance', 75000);
+
+        $this->saver->refresh();
+        $this->assertSame(75000, $this->saver->balance);
+    }
 }
