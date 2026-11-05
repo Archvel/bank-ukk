@@ -63,7 +63,7 @@
 
         <!-- Filter & Search Bar -->
         <div class="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-xs mb-6">
-            <form method="GET" action="{{ route('admin.users.index') }}" class="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <form method="GET" action="{{ url('/admin/users') }}" class="flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div class="flex items-center gap-3 w-full sm:w-auto">
                     <!-- Role Filter -->
                     <select name="role" onchange="this.form.submit()" class="text-xs rounded-xl border-slate-200 bg-slate-50 font-medium text-slate-700 py-2 px-3 focus:border-emerald-500 focus:ring-emerald-500">
@@ -74,7 +74,7 @@
                     </select>
 
                     @if(request()->filled('role') || request()->filled('search'))
-                        <a href="{{ route('admin.users.index') }}" class="text-xs text-slate-500 hover:text-red-600 font-medium flex items-center gap-1">
+                        <a href="{{ url('/admin/users') }}" class="text-xs text-slate-500 hover:text-red-600 font-medium flex items-center gap-1">
                             <span class="material-symbols-outlined text-[16px]">close</span> Reset
                         </a>
                     @endif
@@ -179,7 +179,7 @@
 
                                         <!-- Delete Button -->
                                         @if($user->id !== auth()->id())
-                                            <form method="POST" action="{{ route('admin.users.destroy', $user) }}" class="inline">
+                                            <form method="POST" action="{{ url('/admin/users/'.$user->id) }}" class="inline">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" 
@@ -228,7 +228,7 @@
                     </button>
                 </div>
 
-                <form method="POST" action="{{ route('admin.users.store') }}" class="space-y-4">
+                <form method="POST" action="{{ url('/admin/users') }}" class="space-y-4">
                     @csrf
                     <div>
                         <label class="block text-xs font-semibold text-slate-700 mb-1">Nama Lengkap *</label>

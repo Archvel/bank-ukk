@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ config('app.name', 'E-Teller Bank Mini') }} - Sistem Informasi Bank Mini Sekolah Vokasi</title>
+    <title>{{ config('app.name', 'E-Teller Bank Mini') }} - Sistem Informasi Bank Mini</title>
 
     <!-- Google Fonts: Plus Jakarta Sans & Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">

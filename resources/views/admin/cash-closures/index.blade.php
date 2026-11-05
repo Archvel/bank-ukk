@@ -16,15 +16,15 @@
     <div class="mb-6 p-4 rounded-2xl bg-white border border-slate-200/80 shadow-xs">
         <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Prinsip Rekonsiliasi Kas Otomatis Loket</div>
         <div class="flex flex-wrap items-center gap-3 text-xs font-mono font-medium text-slate-700">
-            <span class="px-2.5 py-1.5 rounded-lg bg-slate-100 border border-slate-200 font-bold">[ Saldo Awal Laci ]</span>
+            <span class="px-2.5 py-1.5 rounded-lg bg-slate-100 border border-slate-200 font-bold">Saldo Awal Laci</span>
             <span class="text-emerald-600 font-bold text-base">+</span>
-            <span class="px-2.5 py-1.5 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200 font-bold">[ Total Setoran ]</span>
+            <span class="px-2.5 py-1.5 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200 font-bold">Total Setoran</span>
             <span class="text-red-600 font-bold text-base">-</span>
-            <span class="px-2.5 py-1.5 rounded-lg bg-red-50 text-red-800 border border-red-200 font-bold">[ Total Penarikan ]</span>
+            <span class="px-2.5 py-1.5 rounded-lg bg-red-50 text-red-800 border border-red-200 font-bold">Total Penarikan</span>
             <span class="text-slate-400 font-bold text-base">=</span>
-            <span class="px-2.5 py-1.5 rounded-lg bg-slate-900 text-white font-bold">[ Saldo Sistem ]</span>
+            <span class="px-2.5 py-1.5 rounded-lg bg-slate-900 text-white font-bold">Saldo Sistem</span>
             <span class="text-slate-400 font-bold text-base">vs</span>
-            <span class="px-2.5 py-1.5 rounded-lg bg-blue-50 text-blue-900 border border-blue-200 font-bold">[ Uang Fisik Terhitung ]</span>
+            <span class="px-2.5 py-1.5 rounded-lg bg-blue-50 text-blue-900 border border-blue-200 font-bold">Uang Fisik Terhitung</span>
         </div>
     </div>
 

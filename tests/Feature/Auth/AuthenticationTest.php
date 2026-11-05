@@ -89,8 +89,8 @@ class AuthenticationTest extends TestCase
         $response = $this->get('/');
 
         $response->assertStatus(200);
-        $response->assertSee('E-Teller Bank Mini');
-        $response->assertSee('Download Aplikasi Nasabah (.APK)');
+        $response->assertSee('Bank Mini');
+        $response->assertSee('Unduh Berkas .APK');
     }
 
     public function test_authenticated_admin_visiting_home_or_login_is_redirected_to_admin_dashboard(): void

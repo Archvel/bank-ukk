@@ -23,13 +23,8 @@
                         </svg>
                     </div>
                     <div>
-                        <span class="text-white font-bold text-lg tracking-tight block">E-Teller Bank Mini
-                            Sekolah</span>
+                        <span class="text-white font-bold text-lg tracking-tight block">Bank Mini</span>
                     </div>
-                    <span
-                        class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                        Sistem Operasional Perbankan SMK
-                    </span>
                 </div>
 
                 <!-- Value Proposition & Feature Cards (Centered Vertically) -->

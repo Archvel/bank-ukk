@@ -132,7 +132,7 @@
                                 class="flex-1 py-1.5 rounded-lg text-xs transition flex items-center justify-center gap-1.5">
                             <span class="material-symbols-outlined text-[16px]">credit_card</span>
                             <span>Penabung Aktif (Savers)</span>
-                            <span class="px-1.5 py-0.2 rounded-full text-[10px] font-mono {{ $activeSavers->count() > 0 ? 'bg-emerald-700/30 text-emerald-100' : 'bg-slate-200 text-slate-600' }}">{{ $activeSavers->count() }}</span>
+                            <span class="px-1.5 py-0.2 rounded-full text-[10px] font-mono {{ ($activeSaversCount ?? $activeSavers->count()) > 0 ? 'bg-emerald-700/30 text-emerald-100' : 'bg-slate-200 text-slate-600' }}">{{ number_format($activeSaversCount ?? $activeSavers->count(), 0, ',', '.') }}</span>
                         </button>
                         <button type="button" 
                                 @click="lookupMode = 'member'; if(identifiedUser && identifiedUser.type !== 'member') clearLookup();"
@@ -140,7 +140,7 @@
                                 class="flex-1 py-1.5 rounded-lg text-xs transition flex items-center justify-center gap-1.5">
                             <span class="material-symbols-outlined text-[16px]">person_add</span>
                             <span>Aktivasi Akun (Members)</span>
-                            <span class="px-1.5 py-0.2 rounded-full text-[10px] font-mono {{ $pendingMembers->count() > 0 ? 'bg-amber-700/30 text-amber-100' : 'bg-slate-200 text-slate-600' }}">{{ $pendingMembers->count() }}</span>
+                            <span class="px-1.5 py-0.2 rounded-full text-[10px] font-mono {{ ($pendingMembersCount ?? $pendingMembers->count()) > 0 ? 'bg-amber-700/30 text-amber-100' : 'bg-slate-200 text-slate-600' }}">{{ number_format($pendingMembersCount ?? $pendingMembers->count(), 0, ',', '.') }}</span>
                         </button>
                     </div>
 

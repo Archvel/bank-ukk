@@ -64,6 +64,10 @@ class CounterController extends Controller
             ->take(15)
             ->get();
 
+        // Real-time total counts for badges
+        $pendingMembersCount = Member::where('account_status', MemberAccountStatus::Inactive)->count();
+        $activeSaversCount = Saver::where('status', 'active')->count();
+
         return view('teller.counter.index', compact(
             'drawerBalance',
             'openingBalance',
@@ -75,7 +79,9 @@ class CounterController extends Controller
             'minInitialDeposit',
             'recentTransactions',
             'pendingMembers',
-            'activeSavers'
+            'activeSavers',
+            'pendingMembersCount',
+            'activeSaversCount'
         ));
     }
 

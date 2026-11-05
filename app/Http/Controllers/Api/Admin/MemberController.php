@@ -5,17 +5,22 @@ namespace App\Http\Controllers\Api\Admin;
 use App\Enums\MemberAccountStatus;
 use App\Enums\Role;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\ImportMemberExcelRequest;
 use App\Http\Requests\StoreMemberRequest;
 use App\Http\Requests\UpdateMemberRequest;
 use App\Http\Resources\MemberResource;
 use App\Models\Member;
 use App\Models\User;
+use App\Services\MemberExcelImportService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class MemberController extends Controller
 {
@@ -148,5 +153,35 @@ class MemberController extends Controller
         return response()->json([
             'message' => 'Data member berhasil dihapus.',
         ]);
+    }
+
+    public function downloadImportTemplate(MemberExcelImportService $importService): StreamedResponse
+    {
+        $csv = $importService->generateTemplateCsv();
+
+        return response()->streamDownload(function () use ($csv) {
+            echo $csv;
+        }, 'template_import_calon_nasabah.csv', [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="template_import_calon_nasabah.csv"',
+        ]);
+    }
+
+    public function importExcel(ImportMemberExcelRequest $request, MemberExcelImportService $importService): JsonResponse|RedirectResponse
+    {
+        /** @var UploadedFile $file */
+        $file = $request->file('file');
+        $result = $importService->import($file);
+
+        if (! $request->wantsJson()) {
+            return redirect('/admin/members')->with('success', "Berhasil mengimpor {$result['imported']} calon nasabah.");
+        }
+
+        return response()->json([
+            'message' => $result['imported'] > 0
+                ? "Berhasil mengimpor {$result['imported']} calon nasabah."
+                : 'Tidak ada data yang berhasil diimpor.',
+            'result' => $result,
+        ], $result['success'] ? Response::HTTP_OK : Response::HTTP_UNPROCESSABLE_ENTITY);
     }
 }

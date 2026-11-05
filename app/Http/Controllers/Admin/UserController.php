@@ -69,7 +69,7 @@ class UserController extends Controller
 
         User::create($validated);
 
-        return redirect()->route('admin.users.index')->with('success', 'Pengguna baru berhasil ditambahkan.');
+        return redirect('/admin/users')->with('success', 'Pengguna baru berhasil ditambahkan.');
     }
 
     public function update(UpdateUserRequest $request, User $user): RedirectResponse|JsonResponse
@@ -88,7 +88,7 @@ class UserController extends Controller
 
         $user->update($validated);
 
-        return redirect()->route('admin.users.index')->with('success', 'Data pengguna berhasil diperbarui.');
+        return redirect('/admin/users')->with('success', 'Data pengguna berhasil diperbarui.');
     }
 
     public function destroy(Request $request, User $user): RedirectResponse|JsonResponse
@@ -107,7 +107,7 @@ class UserController extends Controller
 
         $user->delete();
 
-        return redirect()->route('admin.users.index')->with('success', 'Pengguna berhasil dihapus dari sistem.');
+        return redirect('/admin/users')->with('success', 'Pengguna berhasil dihapus dari sistem.');
     }
 
     public function toggleActive(Request $request, User $user): RedirectResponse

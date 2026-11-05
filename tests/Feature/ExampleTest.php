@@ -19,10 +19,10 @@ class ExampleTest extends TestCase
         $response = $this->get('/');
 
         $response->assertStatus(200);
-        $response->assertSee('E-Teller Bank Mini');
-        $response->assertSee('Download Aplikasi Nasabah (.APK)');
-        $response->assertSee('Login Petugas (Web)');
-        $response->assertSee('Aktivasi Rekening Otomatis');
+        $response->assertSee('Bank Mini');
+        $response->assertSee('Unduh Berkas .APK');
+        $response->assertSee('Login');
+        $response->assertSee('Aktivasi Otomatis');
     }
 
     /**

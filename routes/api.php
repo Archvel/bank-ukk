@@ -66,6 +66,8 @@ Route::middleware('auth:sanctum')->group(function (): void {
     */
     Route::middleware('role:admin')->prefix('admin')->name('admin.')->group(function (): void {
         Route::apiResource('users', AdminUserController::class);
+        Route::get('members/template-import', [AdminMemberController::class, 'downloadImportTemplate'])->name('members.import-template');
+        Route::post('members/import', [AdminMemberController::class, 'importExcel'])->name('members.import');
         Route::apiResource('members', AdminMemberController::class);
 
         Route::prefix('audit-journals')->group(function (): void {

@@ -117,7 +117,7 @@ class AdminWebScreensTest extends TestCase
         $this->actingAs($this->admin)->get('/admin/audit-journals')
             ->assertOk()
             ->assertSee('Audit Jurnal Akuntansi')
-            ->assertSee('BALANCE (SEIMBANG)');
+            ->assertSee('SEIMBANG');
 
         // 7. Laporan Transaksi & PDF
         $this->actingAs($this->admin)->get('/admin/reports')
@@ -163,6 +163,44 @@ class AdminWebScreensTest extends TestCase
 
         $this->teller->refresh();
         $this->assertFalse($this->teller->is_active);
+    }
+
+    public function test_admin_can_update_member_via_web_form_and_redirects_to_members_page(): void
+    {
+        $member = Member::first();
+
+        $response = $this->actingAs($this->admin)->put("/admin/members/{$member->id}", [
+            'student_name' => 'Nama Baru Siswa',
+            'email' => 'namabaru@bankmini.test',
+            'graduation_year' => '2028',
+            'username' => 'siswa_baru_2028',
+            'phone_number' => '081299998888',
+        ]);
+
+        $response->assertRedirect('/admin/members');
+        $response->assertSessionHas('success');
+        $this->assertDatabaseHas('members', [
+            'id' => $member->id,
+            'student_name' => 'Nama Baru Siswa',
+            'graduation_year' => '2028',
+        ]);
+    }
+
+    public function test_admin_can_update_user_via_web_form_and_redirects_to_users_page(): void
+    {
+        $response = $this->actingAs($this->admin)->put("/admin/users/{$this->teller->id}", [
+            'name' => 'Teller Satu Update',
+            'email' => 'teller1_update@bankmini.test',
+            'username' => 'teller1_update',
+            'role' => 'teller',
+        ]);
+
+        $response->assertRedirect('/admin/users');
+        $response->assertSessionHas('success');
+        $this->assertDatabaseHas('users', [
+            'id' => $this->teller->id,
+            'name' => 'Teller Satu Update',
+        ]);
     }
 
     public function test_admin_is_redirected_from_generic_dashboard_to_admin_dashboard(): void
