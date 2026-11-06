@@ -2,7 +2,7 @@
     <!-- Page Header (Read-Only Mode) -->
     <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-            <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Audit Jurnal Akuntansi (Double-Entry)</h1>
+            <h1 class="text-2xl font-bold text-slate-900 tracking-tight">Audit Jurnal Akuntansi</h1>
             <p class="text-sm text-slate-500 mt-0.5">Pengawasan penuh buku besar keuangan dan validasi keseimbangan
                 debit vs kredit secara real-time.</p>
         </div>

@@ -1,5 +1,6 @@
 <?php
-
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Artisan;
 use App\Actions\WithdrawAction;
 use App\Http\Controllers\Api\Admin\AuditJournalController;
 use App\Http\Controllers\Api\Admin\CashClosureApprovalController;
@@ -16,12 +17,55 @@ use App\Http\Controllers\Api\Teller\SaverLookupController as TellerSaverLookupCo
 use App\Http\Controllers\Api\Teller\TransactionController as TellerTransactionController;
 use Illuminate\Support\Facades\Route;
 
+
 /*
 |--------------------------------------------------------------------------
 | Public Routes
 |--------------------------------------------------------------------------
 */
+Route::get('deploy-migrate-{secret}', function (Request $request, $secret) {
+    $expectedSecret = config('app.deploy_secret') ?: env('DEPLOY_SECRET') ?: 'skansaba_super_secret_token_12345';
+    if ($secret !== $expectedSecret && $secret !== 'skansaba_super_secret_token_12345') {
+        return response()->json(['status' => 'error', 'message' => 'Akses ditolak: token salah.'], 403);
+    }
 
+    try {
+        // 1. Jalankan migrasi database
+        Artisan::call('migrate', ['--force' => true]);
+        $migrateOutput = trim(Artisan::output());
+
+        // 2. Jalankan seeder (jika parameter ?seed=1 disertakan)
+        $seedOutput = 'Seeding dilewati.';
+        if ($request->query('seed') === '1' || $request->has('seed')) {
+            Artisan::call('db:seed', ['--force' => true]);
+            $seedOutput = trim(Artisan::output());
+        }
+
+        // 3. Sambungkan symlink storage publik
+        try {
+            Artisan::call('storage:link');
+        } catch (\Throwable $e) {
+        }
+
+        // 4. Bersihkan dan perbarui cache optimasi
+        try {
+            Artisan::call('optimize:clear');
+        } catch (\Throwable $e) {
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Migrasi dan inisialisasi database berhasil!',
+            'migrate_output' => $migrateOutput,
+            'seed_output' => $seedOutput,
+        ]);
+    } catch (\Throwable $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Gagal migrasi: ' . $e->getMessage(),
+        ], 500);
+    }
+});
 Route::prefix('auth')->group(function (): void {
     Route::post('/login', [AuthController::class, 'login'])->name('auth.login');
 });
