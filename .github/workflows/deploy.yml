@@ -15,7 +15,7 @@ jobs:
       - name: 🐘 Setup PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: "8.3" # Sesuaikan dengan versi PHP Anda (8.2 / 8.3 / 8.4)
+          php-version: "8.4" # Sesuaikan dengan versi PHP Anda (8.2 / 8.3 / 8.4)
           extensions: mbstring, xml, ctype, iconv, intl, pdo_mysql, bcmath, fileinfo, gd, zip, curl
           coverage: none
 
