@@ -4,14 +4,9 @@ namespace Database\Seeders;
 
 use App\Enums\MemberAccountStatus;
 use App\Enums\Role;
-use App\Models\JournalEntry;
 use App\Models\Member;
-use App\Models\PinResetRequest;
-use App\Models\Saver;
-use App\Models\Transaction;
 use App\Models\User;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
 class StudentDataSeeder extends Seeder
@@ -21,29 +16,7 @@ class StudentDataSeeder extends Seeder
      */
     public function run(): void
     {
-        $this->command?->info('Menghapus semua data nasabah dan saver lama...');
-
-        DB::transaction(function () {
-            // 1. Hapus riwayat PIN reset request milik saver
-            PinResetRequest::query()->delete();
-
-            // 2. Hapus transaksi & jurnal milik saver
-            JournalEntry::query()->delete();
-            Transaction::query()->delete();
-
-            // 3. Hapus semua data saver (termasuk soft-deleted)
-            Saver::withTrashed()->forceDelete();
-
-            // 4. Hapus data member
-            Member::query()->delete();
-
-            // 5. Hapus semua user nasabah (biarkan admin & teller tetap ada)
-            User::where('role', Role::Nasabah)->delete();
-        });
-
-        $this->command?->info('Data nasabah dan saver lama berhasil dibersihkan.');
-
-        // 6. Baca file data siswa
+        // 1. Baca file data siswa
         $filePath = database_path('data/raw_students.txt');
         if (! file_exists($filePath)) {
             $this->command?->error("File {$filePath} tidak ditemukan!");
@@ -127,14 +100,14 @@ class StudentDataSeeder extends Seeder
 
         $this->command?->info('Total siswa berhasil diparse: '.count($students).' siswa.');
 
-        // 7. Simpan siswa ke database dalam bentuk User & Member Inactive
+        // 2. Simpan siswa ke database secara aman (Non-Destructive FirstOrCreate)
         $insertedCount = 0;
         $uniqueNisMap = [];
 
         foreach ($students as $data) {
             $nis = $data['nis'];
 
-            // Cek duplikasi NIS
+            // Cek duplikasi NIS di file
             if (isset($uniqueNisMap[$nis])) {
                 $this->command?->warn("Peringatan: NIS {$nis} ({$data['name']}) terduplikasi di file, dilewati.");
                 continue;
@@ -143,35 +116,43 @@ class StudentDataSeeder extends Seeder
 
             $email = "{$nis}@siswa.bankmini.test";
 
-            // Buat User Akun
-            $user = User::create([
-                'name' => $data['name'],
-                'username' => $nis,
-                'email' => $email,
-                'password' => $defaultPassword,
-                'role' => Role::Nasabah,
-                'is_active' => true,
-                'email_verified_at' => $now,
-            ]);
+            // Buat User Akun hanya jika belum ada (tidak menimpa akun lama)
+            $user = User::firstOrCreate(
+                ['username' => $nis],
+                [
+                    'name' => $data['name'],
+                    'email' => $email,
+                    'password' => $defaultPassword,
+                    'role' => Role::Nasabah,
+                    'is_active' => true,
+                    'email_verified_at' => $now,
+                ]
+            );
 
-            // Buat Member (Status: Inactive / Belum diaktifkan, Menunggu Setoran Awal)
-            Member::create([
-                'user_id' => $user->id,
-                'student_name' => $data['name'],
-                'nis' => $nis,
-                'absen' => $data['absen'],
-                'class_name' => $data['class_name'],
-                'major' => $data['major'],
-                'academic_year' => $data['academic_year'],
-                'gender' => $data['gender'],
-                'graduation_year' => $data['graduation_year'],
-                'account_status' => MemberAccountStatus::Inactive,
-            ]);
+            // Buat Member hanya jika belum ada (tidak mereset status member yang sudah aktif atau memiliki transaksi)
+            $existingMember = Member::where('user_id', $user->id)
+                ->orWhere('nis', $nis)
+                ->first();
 
-            $insertedCount++;
+            if (! $existingMember) {
+                Member::create([
+                    'user_id' => $user->id,
+                    'student_name' => $data['name'],
+                    'nis' => $nis,
+                    'absen' => $data['absen'],
+                    'class_name' => $data['class_name'],
+                    'major' => $data['major'],
+                    'academic_year' => $data['academic_year'],
+                    'gender' => $data['gender'],
+                    'graduation_year' => $data['graduation_year'],
+                    'account_status' => MemberAccountStatus::Inactive,
+                ]);
+
+                $insertedCount++;
+            }
         }
 
-        $this->command?->info("Sukses! Sebanyak {$insertedCount} data calon nasabah siswa berhasil dimasukkan ke sistem dengan status akun BELUM DIAKTIFKAN (Inactive Member).");
+        $this->command?->info("Sukses! Sebanyak {$insertedCount} data calon nasabah baru berhasil ditambahkan (data nasabah yang sudah aktif dan riwayat transaksi tetap terjaga utuh).");
     }
 }
 
