@@ -90,7 +90,7 @@
     <header
         class="fixed top-0 left-0 right-0 h-[70px] bg-[#0F172A] border-b border-slate-800 z-50 text-white flex items-center justify-between px-6 no-print shadow-md">
         <!-- Left: Brand Logo & Station Badge -->
-        <div class="flex items-center gap-4">
+        <div class="flex items-center gap-4 shrink-0">
             <div class="flex items-center gap-3">
                 <div
                     class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center text-white shadow-md shadow-emerald-950/40">
@@ -103,8 +103,8 @@
             </div>
         </div>
 
-        <!-- Center: 3 Navigation Tabs -->
-        <nav class="hidden md:flex items-center gap-1.5 bg-slate-800/80 p-1.5 rounded-xl border border-slate-700/60">
+        <!-- Center: 3 Navigation Tabs (Always Centered) -->
+        <nav class="hidden md:flex absolute left-1/2 -translate-x-1/2 items-center gap-1.5 bg-slate-800/80 p-1.5 rounded-xl border border-slate-700/60 z-10 shadow-inner">
             <!-- 1. Meja Layanan Loket -->
             <a href="{{ route('teller.counter') }}"
                 class="flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold transition-all {{ request()->routeIs('teller.counter*') ? 'bg-[#059669] text-white shadow-sm' : 'text-slate-300 hover:text-white hover:bg-slate-700/60' }}">
@@ -128,7 +128,7 @@
         </nav>
 
         <!-- Right: Status Widgets & Teller Persona -->
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-3 shrink-0">
             <!-- Kas Awal Session Widget / Button -->
             <button type="button" @click="openKasAwalModal = true"
                 title="{{ $hasOpenedSession ? 'Kas awal sesi aktif. Klik untuk lihat atau perbarui' : 'Sesi loket baru: Klik untuk input uang kas awal laci' }}"
