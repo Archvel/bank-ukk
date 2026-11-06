@@ -29,6 +29,9 @@ Route::get('deploy-migrate-{secret}', function (Request $request, $secret) {
         return response()->json(['status' => 'error', 'message' => 'Akses ditolak: token salah.'], 403);
     }
 
+    @set_time_limit(300);
+    @ini_set('memory_limit', '512M');
+
     try {
         // 1. Jalankan migrasi database
         Artisan::call('migrate', ['--force' => true]);
@@ -37,7 +40,13 @@ Route::get('deploy-migrate-{secret}', function (Request $request, $secret) {
         // 2. Jalankan seeder (jika parameter ?seed=1 disertakan)
         $seedOutput = 'Seeding dilewati.';
         if ($request->query('seed') === '1' || $request->has('seed')) {
-            Artisan::call('db:seed', ['--force' => true]);
+            $class = $request->query('class');
+            $params = ['--force' => true];
+            if (! empty($class)) {
+                $params['--class'] = (string) $class;
+            }
+
+            Artisan::call('db:seed', $params);
             $seedOutput = trim(Artisan::output());
         }
 

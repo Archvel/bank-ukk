@@ -2,6 +2,7 @@
 
 
 return [
+    'deploy_secret' => env('DEPLOY_SECRET', 'skansaba_super_secret_token_12345'),
 
     /*
     |--------------------------------------------------------------------------
