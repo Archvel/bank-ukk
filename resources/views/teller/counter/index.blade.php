@@ -72,32 +72,42 @@
                 <div class="bg-slate-900 rounded-2xl border border-slate-800 p-4 shadow-md text-white relative overflow-hidden">
                     <div class="flex items-center justify-between mb-3">
                         <div class="flex items-center gap-2">
-                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                            <span class="w-2.5 h-2.5 rounded-full" :class="isCameraScanning ? 'bg-emerald-400 animate-pulse' : 'bg-slate-500'"></span>
                             <span class="text-xs font-mono font-bold uppercase tracking-wider text-slate-300">QR Scanner Kamera Loket 01</span>
                         </div>
-                        <span class="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-slate-800 text-emerald-400 border border-slate-700">
-                            CAM AUTO-DETECT
+                        <span class="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold border transition-colors"
+                              :class="isCameraScanning ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40 animate-pulse' : 'bg-slate-800 text-slate-400 border-slate-700'"
+                              x-text="isCameraScanning ? 'CAM LIVE' : 'CAM STANDBY'">
+                            CAM STANDBY
                         </span>
                     </div>
 
-                    <!-- Video / Scanner Display Area -->
-                    <div class="relative w-full aspect-[4/3] bg-black rounded-xl overflow-hidden border border-slate-700 flex items-center justify-center">
+                    <!-- Video / Scanner Display Area (Ringkas & Proporsional saat Standby) -->
+                    <div class="relative w-full bg-black rounded-xl overflow-hidden border border-slate-700 flex items-center justify-center transition-all duration-200"
+                         :class="isCameraScanning ? 'aspect-[4/3] min-h-[280px] sm:min-h-[320px]' : 'h-24 sm:h-28 cursor-pointer group hover:border-emerald-500/50 hover:bg-slate-950/80'"
+                         @click="if(!isCameraScanning) toggleCameraScanner()">
                         <div id="qr-reader" class="w-full h-full" x-show="isCameraScanning"></div>
 
                         <!-- Emulated HUD when camera is standby or loading -->
-                        <div class="absolute inset-0 flex flex-col items-center justify-center p-4 text-center pointer-events-none" x-show="!isCameraScanning">
+                        <div class="absolute inset-0 flex items-center justify-center p-3 pointer-events-none" x-show="!isCameraScanning">
                             <!-- Tactical Green Corner HUD Crosshairs -->
-                            <div class="absolute top-4 left-4 w-6 h-6 border-t-2 border-l-2 border-emerald-400"></div>
-                            <div class="absolute top-4 right-4 w-6 h-6 border-t-2 border-r-2 border-emerald-400"></div>
-                            <div class="absolute bottom-4 left-4 w-6 h-6 border-b-2 border-l-2 border-emerald-400"></div>
-                            <div class="absolute bottom-4 right-4 w-6 h-6 border-b-2 border-r-2 border-emerald-400"></div>
-                            
-                            <!-- Animated laser line -->
-                            <div class="absolute w-3/4 h-0.5 bg-gradient-to-r from-transparent via-emerald-400 to-transparent shadow-[0_0_8px_#34D399] laser-line"></div>
+                            <div class="absolute top-2.5 left-2.5 w-3 h-3 border-t-2 border-l-2 border-emerald-400/60"></div>
+                            <div class="absolute top-2.5 right-2.5 w-3 h-3 border-t-2 border-r-2 border-emerald-400/60"></div>
+                            <div class="absolute bottom-2.5 left-2.5 w-3 h-3 border-b-2 border-l-2 border-emerald-400/60"></div>
+                            <div class="absolute bottom-2.5 right-2.5 w-3 h-3 border-b-2 border-r-2 border-emerald-400/60"></div>
 
-                            <span class="material-symbols-outlined text-4xl text-slate-600 mb-2">qr_code_scanner</span>
-                            <p class="text-xs font-semibold text-slate-300">Arahkan Kartu Pelajar / QR Siswa ke Kamera</p>
-                            <p class="text-[11px] text-slate-500 mt-0.5">Sistem akan mengidentifikasi rekening secara otomatis</p>
+                            <div class="flex items-center gap-3.5 px-2 w-full">
+                                <div class="w-10 h-10 rounded-xl bg-slate-800/90 border border-slate-700/80 flex items-center justify-center shrink-0 text-emerald-400 group-hover:bg-emerald-500/20 group-hover:border-emerald-500/40 transition">
+                                    <span class="material-symbols-outlined text-2xl">qr_code_scanner</span>
+                                </div>
+                                <div class="min-w-0 flex-1">
+                                    <div class="flex items-center gap-2">
+                                        <p class="text-xs font-bold text-slate-200 group-hover:text-white transition">Kamera Scanner Loket (Standby)</p>
+                                        <span class="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-slate-800 text-slate-400 border border-slate-700">OFF</span>
+                                    </div>
+                                    <p class="text-[11px] text-slate-400 mt-0.5 leading-snug">Klik untuk menyalakan kamera QR atau gunakan kolom pencarian di bawah.</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -105,15 +115,15 @@
                     <div class="mt-3 flex items-center justify-between gap-2">
                         <button type="button" 
                                 @click="toggleCameraScanner()"
-                                :class="isCameraScanning ? 'bg-red-600 hover:bg-red-700' : 'bg-emerald-600 hover:bg-emerald-700'"
-                                class="flex-1 py-2 rounded-xl text-xs font-bold text-white flex items-center justify-center gap-1.5 transition">
+                                :class="isCameraScanning ? 'bg-red-600 hover:bg-red-700 shadow-red-900/30' : 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-900/30'"
+                                class="flex-1 py-2 rounded-xl text-xs font-bold text-white flex items-center justify-center gap-1.5 transition shadow-xs">
                             <span class="material-symbols-outlined text-[16px]" x-text="isCameraScanning ? 'videocam_off' : 'videocam'"></span>
                             <span x-text="isCameraScanning ? 'Hentikan Kamera' : 'Buka Kamera QR'"></span>
                         </button>
 
-                        <label class="cursor-pointer py-2 px-3 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 flex items-center gap-1.5 transition">
+                        <label class="cursor-pointer py-2 px-3 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 flex items-center gap-1.5 transition shrink-0">
                             <span class="material-symbols-outlined text-[16px]">file_upload</span>
-                            <span>Upload Foto QR</span>
+                            <span>Upload QR</span>
                             <input type="file" accept="image/*" class="hidden" @change="handleFileUpload($event)" />
                         </label>
                     </div>
