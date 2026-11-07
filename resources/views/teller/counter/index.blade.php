@@ -3,25 +3,29 @@
          x-data="posCounter()"
          @keydown.window.f10.prevent="if(!showPinModal && !showReceiptModal) openPinModal()">
 
-        <!-- Sesi Loket & Kas Awal Status Banner -->
+        <!-- Sesi Loket & Kas Awal Status Bar (Satu Baris Ringkas & Terpadu) -->
         @if(!($hasOpenedSession ?? false))
-        <div class="p-4 rounded-2xl bg-amber-50 border-2 border-amber-300 text-amber-950 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 shadow-xs">
-            <div class="flex items-center gap-3.5">
-                <div class="w-11 h-11 rounded-xl bg-amber-100 border border-amber-300 text-amber-700 flex items-center justify-center shrink-0">
-                    <span class="material-symbols-outlined text-2xl">account_balance_wallet</span>
-                </div>
-                <div>
-                    <h3 class="font-bold text-sm text-amber-900 tracking-tight">Sesi Hari Ini Belum Diinisialisasi Kas Awal</h3>
-                    <p class="text-xs text-amber-800 mt-0.5 leading-relaxed">
-                        Anda belum menginput uang modal awal kasir untuk sesi loket hari ini ({{ now('Asia/Jakarta')->translatedFormat('d F Y') }}). Sesi operasional loket dibuka pukul <strong>07:00 hingga 15:30 WIB</strong>.
-                    </p>
-                </div>
+        <div class="px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-xl bg-amber-50 border border-amber-300 text-amber-950 flex flex-wrap items-center justify-between gap-3 text-xs shadow-xs">
+            <div class="flex items-center gap-2.5 flex-wrap min-w-0">
+                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-500/20 text-amber-900 border border-amber-400/40 font-bold text-[11px] shrink-0">
+                    <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+                    Kas Awal Belum Diinput
+                </span>
+                <span class="text-amber-900 leading-normal">
+                    Sesi hari ini ({{ now('Asia/Jakarta')->translatedFormat('d F Y') }}) belum diinisialisasi. Jam layanan loket: <strong>07:00 – 15:30 WIB</strong>.
+                    @if(!($isWithinOperatingHours ?? true))
+                    <span class="text-amber-800 font-medium hidden md:inline">• Di luar jam operasional (disarankan rekonsiliasi & tutup kas).</span>
+                    @endif
+                </span>
             </div>
             <div class="flex items-center gap-2 shrink-0">
+                <span class="font-mono text-[11px] font-bold text-amber-800 px-2.5 py-1 rounded-lg bg-amber-100/90 border border-amber-200 shrink-0">
+                    {{ now('Asia/Jakarta')->format('H:i') }} WIB
+                </span>
                 <button type="button" 
                         @click="$dispatch('open-kas-awal-modal')"
-                        class="w-full sm:w-auto px-4 py-2.5 rounded-xl text-xs font-bold bg-amber-600 hover:bg-amber-700 text-white shadow-xs transition flex items-center justify-center gap-2">
-                    <span class="material-symbols-outlined text-[18px]">add_circle</span>
+                        class="px-3 py-1.5 rounded-lg text-xs font-bold bg-amber-600 hover:bg-amber-700 text-white shadow-xs transition flex items-center justify-center gap-1.5 shrink-0">
+                    <span class="material-symbols-outlined text-[16px]">add_circle</span>
                     <span>Input Kas Awal Sesi</span>
                 </button>
             </div>
@@ -39,6 +43,13 @@
                 <span class="text-slate-400">Transaksi: <strong class="text-emerald-400 font-bold">{{ $todayTrxCount ?? 0 }} Trx</strong></span>
             </div>
             <div class="flex items-center gap-2">
+                @if(!($isWithinOperatingHours ?? true))
+                <a href="{{ route('teller.cash-closure.index') }}" 
+                   class="text-xs font-semibold text-amber-300 hover:text-white flex items-center gap-1 transition px-2.5 py-1 rounded-lg hover:bg-slate-800 border border-amber-500/40">
+                    <span class="material-symbols-outlined text-[16px] text-amber-400">payments</span>
+                    <span>Tutup Kas Harian</span>
+                </a>
+                @endif
                 <button type="button" 
                         @click="$dispatch('open-kas-awal-modal')"
                         class="text-xs font-semibold text-slate-300 hover:text-white flex items-center gap-1 transition px-2.5 py-1 rounded-lg hover:bg-slate-800 border border-slate-700/60">
@@ -46,20 +57,6 @@
                     <span>Sesuaikan Kas Awal</span>
                 </button>
             </div>
-        </div>
-        @endif
-
-        @if(!($isWithinOperatingHours ?? true))
-        <div class="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-900 text-xs flex items-center justify-between gap-3 shadow-xs">
-            <div class="flex items-center gap-2">
-                <span class="material-symbols-outlined text-amber-600 text-[18px]">schedule</span>
-                <span>
-                    <strong>Pemberitahuan Jam Operasional:</strong> Jam kerja layanan loket adalah <strong>07:00 - 15:30 WIB</strong>. Setelah pukul 15:30 WIB, teller disarankan merekonsiliasi fisik kas dan mengajukan penutupan kas harian.
-                </span>
-            </div>
-            <span class="font-mono text-[11px] font-bold text-amber-800 px-2 py-0.5 rounded bg-amber-100 shrink-0">
-                {{ now('Asia/Jakarta')->format('H:i') }} WIB
-            </span>
         </div>
         @endif
 
