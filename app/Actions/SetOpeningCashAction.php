@@ -49,9 +49,9 @@ class SetOpeningCashAction
 
         $now = now(self::TIMEZONE);
         $start = $now->copy()->setTime(7, 0, 0);
-        $end = $now->copy()->setTime(23, 45, 0);
+        $end = $now->copy()->setTime(15, 30, 0);
 
-        if ($enforceOperatingHours && !$now->betweenIncluded($start, $end)) {
+        if ($enforceOperatingHours && ! $now->betweenIncluded($start, $end)) {
             $currentTimeStr = $now->format('H:i');
             if ($now->lt($start)) {
                 throw ValidationException::withMessages([

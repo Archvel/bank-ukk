@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Admin;
 
+use App\Actions\PromoteStudentsAction;
 use App\Enums\MemberAccountStatus;
 use App\Enums\Role;
 use App\Http\Controllers\Controller;
@@ -82,6 +83,8 @@ class MemberController extends Controller
             return Member::create([
                 'user_id' => $user->id,
                 'student_name' => $validated['student_name'],
+                'class_name' => $validated['class_name'] ?? null,
+                'major' => $validated['major'] ?? null,
                 'graduation_year' => $validated['graduation_year'],
                 'account_status' => MemberAccountStatus::Inactive,
             ]);
@@ -113,6 +116,8 @@ class MemberController extends Controller
         DB::transaction(function () use ($member, $validated) {
             $member->update([
                 'student_name' => $validated['student_name'] ?? $member->student_name,
+                'class_name' => array_key_exists('class_name', $validated) ? $validated['class_name'] : $member->class_name,
+                'major' => array_key_exists('major', $validated) ? $validated['major'] : $member->major,
                 'graduation_year' => $validated['graduation_year'] ?? $member->graduation_year,
             ]);
 
@@ -183,5 +188,37 @@ class MemberController extends Controller
                 : 'Tidak ada data yang berhasil diimpor.',
             'result' => $result,
         ], $result['success'] ? Response::HTTP_OK : Response::HTTP_UNPROCESSABLE_ENTITY);
+    }
+
+    public function promote(Request $request, PromoteStudentsAction $action): JsonResponse
+    {
+        $validated = $request->validate([
+            'mode' => ['required', 'string', 'in:all,level,class'],
+            'source_level' => ['nullable', 'string', 'in:X,XI,XII'],
+            'source_class' => ['nullable', 'string', 'max:50'],
+            'target_class' => ['nullable', 'string', 'max:50'],
+            'academic_year' => ['nullable', 'string', 'max:50'],
+            'graduate_grade_twelve' => ['nullable', 'boolean'],
+        ]);
+
+        $result = $action->handle($validated);
+
+        return response()->json($result);
+    }
+
+    public function promoteMember(Request $request, Member $member, PromoteStudentsAction $action): JsonResponse
+    {
+        $validated = $request->validate([
+            'target_class' => ['nullable', 'string', 'max:50'],
+            'academic_year' => ['nullable', 'string', 'max:50'],
+        ]);
+
+        $oldClass = $member->class_name ?: '(Belum ada kelas)';
+        $updated = $action->promoteSingle($member, $validated['target_class'] ?? null, $validated['academic_year'] ?? null);
+
+        return response()->json([
+            'message' => "Siswa {$member->student_name} berhasil dinaikkan dari kelas {$oldClass} ke {$updated->class_name}.",
+            'member' => new MemberResource($updated->load(['user', 'saver'])),
+        ]);
     }
 }

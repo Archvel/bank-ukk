@@ -76,6 +76,8 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     // 2. Data Calon Penabung (Members)
     Route::get('/members/template-import', [AdminMemberController::class, 'downloadImportTemplate'])->name('members.import-template');
     Route::post('/members/import', [AdminMemberController::class, 'importExcel'])->name('members.import');
+    Route::post('/members/promote', [AdminMemberController::class, 'promote'])->name('members.promote');
+    Route::post('/members/{member}/promote', [AdminMemberController::class, 'promoteMember'])->name('members.promote-single');
     Route::get('/members', [AdminMemberController::class, 'index'])->name('members.index');
     Route::post('/members', [AdminMemberController::class, 'store'])->name('members.store');
     Route::put('/members/{member}', [AdminMemberController::class, 'update'])->name('members.update');

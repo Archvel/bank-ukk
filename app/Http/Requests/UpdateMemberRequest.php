@@ -23,6 +23,8 @@ class UpdateMemberRequest extends FormRequest
 
         return [
             'student_name' => ['sometimes', 'required', 'string', 'max:255'],
+            'class_name' => ['sometimes', 'nullable', 'string', 'max:50'],
+            'major' => ['sometimes', 'nullable', 'string', 'max:50'],
             'email' => ['sometimes', 'required', 'string', 'email', 'max:255', Rule::unique('users', 'email')->ignore($userId)],
             'username' => ['nullable', 'string', 'max:50', 'alpha_dash', Rule::unique('users', 'username')->ignore($userId)],
             'graduation_year' => ['sometimes', 'required', 'string', 'max:10'],

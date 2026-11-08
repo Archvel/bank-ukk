@@ -1,6 +1,5 @@
 <?php
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Artisan;
+
 use App\Actions\WithdrawAction;
 use App\Http\Controllers\Api\Admin\AuditJournalController;
 use App\Http\Controllers\Api\Admin\CashClosureApprovalController;
@@ -15,8 +14,9 @@ use App\Http\Controllers\Api\Teller\MemberLookupController as TellerMemberLookup
 use App\Http\Controllers\Api\Teller\OpeningCashController as TellerOpeningCashController;
 use App\Http\Controllers\Api\Teller\SaverLookupController as TellerSaverLookupController;
 use App\Http\Controllers\Api\Teller\TransactionController as TellerTransactionController;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
-
 
 /*
 |--------------------------------------------------------------------------
@@ -53,13 +53,13 @@ Route::get('deploy-migrate-{secret}', function (Request $request, $secret) {
         // 3. Sambungkan symlink storage publik
         try {
             Artisan::call('storage:link');
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
         }
 
         // 4. Bersihkan dan perbarui cache optimasi
         try {
             Artisan::call('optimize:clear');
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
         }
 
         return response()->json([
@@ -68,10 +68,10 @@ Route::get('deploy-migrate-{secret}', function (Request $request, $secret) {
             'migrate_output' => $migrateOutput,
             'seed_output' => $seedOutput,
         ]);
-    } catch (\Throwable $e) {
+    } catch (Throwable $e) {
         return response()->json([
             'status' => 'error',
-            'message' => 'Gagal migrasi: ' . $e->getMessage(),
+            'message' => 'Gagal migrasi: '.$e->getMessage(),
         ], 500);
     }
 });
@@ -121,6 +121,8 @@ Route::middleware('auth:sanctum')->group(function (): void {
         Route::apiResource('users', AdminUserController::class);
         Route::get('members/template-import', [AdminMemberController::class, 'downloadImportTemplate'])->name('members.import-template');
         Route::post('members/import', [AdminMemberController::class, 'importExcel'])->name('members.import');
+        Route::post('members/promote', [AdminMemberController::class, 'promote'])->name('api.members.promote');
+        Route::post('members/{member}/promote', [AdminMemberController::class, 'promoteMember'])->name('api.members.promote-single');
         Route::apiResource('members', AdminMemberController::class);
 
         Route::prefix('audit-journals')->group(function (): void {
