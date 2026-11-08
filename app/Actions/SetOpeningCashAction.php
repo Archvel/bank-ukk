@@ -25,7 +25,7 @@ class SetOpeningCashAction
     {
         $now = $time ? Carbon::instance($time)->setTimezone(self::TIMEZONE) : now(self::TIMEZONE);
         $start = $now->copy()->setTime(7, 0, 0);
-        $end = $now->copy()->setTime(23, 30, 0);
+        $end = $now->copy()->setTime(15, 30, 0);
 
         return $now->betweenIncluded($start, $end);
     }
@@ -49,7 +49,7 @@ class SetOpeningCashAction
 
         $now = now(self::TIMEZONE);
         $start = $now->copy()->setTime(7, 0, 0);
-        $end = $now->copy()->setTime(15, 30, 0);
+        $end = $now->copy()->setTime(23, 45, 0);
 
         if ($enforceOperatingHours && !$now->betweenIncluded($start, $end)) {
             $currentTimeStr = $now->format('H:i');
