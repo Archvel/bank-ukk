@@ -41,7 +41,7 @@ class RbacSecurityTest extends TestCase
 
     public function test_teller_cannot_access_admin_user_management(): void
     {
-        $response = $this->actingAs($this->teller, 'sanctum')->getJson(route('admin.users.index'));
+        $response = $this->actingAs($this->teller, 'sanctum')->getJson(route('admin.api.users.index'));
         $response->assertForbidden();
     }
 
@@ -62,7 +62,7 @@ class RbacSecurityTest extends TestCase
 
     public function test_unauthenticated_requests_are_rejected(): void
     {
-        $response = $this->getJson(route('admin.users.index'));
+        $response = $this->getJson(route('admin.api.users.index'));
         $response->assertUnauthorized();
     }
 }

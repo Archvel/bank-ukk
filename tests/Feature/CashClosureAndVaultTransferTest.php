@@ -115,7 +115,7 @@ class CashClosureAndVaultTransferTest extends TestCase
         ]);
 
         $approveResponse = $this->actingAs($this->admin, 'sanctum')->postJson(
-            route('admin.cash-closures.process', $closure),
+            route('admin.api.cash-closures.process', $closure),
             [
                 'approve' => true,
             ]

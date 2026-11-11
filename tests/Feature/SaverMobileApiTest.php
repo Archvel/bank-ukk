@@ -335,12 +335,12 @@ class SaverMobileApiTest extends TestCase
     {
         // Cannot access admin users
         $adminRes = $this->actingAs($this->saverUser, 'sanctum')
-            ->getJson(route('admin.users.index'));
+            ->getJson(route('admin.api.users.index'));
         $adminRes->assertForbidden();
 
         // Cannot access admin audit journals
         $journalRes = $this->actingAs($this->saverUser, 'sanctum')
-            ->getJson(route('admin.audit-journals.index'));
+            ->getJson(route('admin.api.audit-journals.index'));
         $journalRes->assertForbidden();
 
         // Cannot manipulate teller deposit transactions

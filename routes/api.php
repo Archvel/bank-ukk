@@ -117,12 +117,12 @@ Route::middleware('auth:sanctum')->group(function (): void {
     | Administrator & Supervisor Routes
     |--------------------------------------------------------------------------
     */
-    Route::middleware('role:admin')->prefix('admin')->name('admin.')->group(function (): void {
+    Route::middleware('role:admin')->prefix('admin')->name('admin.api.')->group(function (): void {
         Route::apiResource('users', AdminUserController::class);
         Route::get('members/template-import', [AdminMemberController::class, 'downloadImportTemplate'])->name('members.import-template');
         Route::post('members/import', [AdminMemberController::class, 'importExcel'])->name('members.import');
-        Route::post('members/promote', [AdminMemberController::class, 'promote'])->name('api.members.promote');
-        Route::post('members/{member}/promote', [AdminMemberController::class, 'promoteMember'])->name('api.members.promote-single');
+        Route::post('members/promote', [AdminMemberController::class, 'promote'])->name('members.promote');
+        Route::post('members/{member}/promote', [AdminMemberController::class, 'promoteMember'])->name('members.promote-single');
         Route::apiResource('members', AdminMemberController::class);
 
         Route::prefix('audit-journals')->group(function (): void {

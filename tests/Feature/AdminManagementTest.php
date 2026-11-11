@@ -30,7 +30,7 @@ class AdminManagementTest extends TestCase
     public function test_admin_can_crud_users(): void
     {
         // 1. Create a new teller
-        $storeResponse = $this->actingAs($this->admin, 'sanctum')->postJson(route('admin.users.store'), [
+        $storeResponse = $this->actingAs($this->admin, 'sanctum')->postJson(route('admin.api.users.store'), [
             'name' => 'Teller Baru',
             'username' => 'teller_baru',
             'email' => 'tellerbaru@bankmini.test',
@@ -46,12 +46,12 @@ class AdminManagementTest extends TestCase
         $userId = $storeResponse->json('user.id');
 
         // 2. Index users
-        $indexResponse = $this->actingAs($this->admin, 'sanctum')->getJson(route('admin.users.index', ['search' => 'teller_baru']));
+        $indexResponse = $this->actingAs($this->admin, 'sanctum')->getJson(route('admin.api.users.index', ['search' => 'teller_baru']));
         $indexResponse->assertOk()
             ->assertJsonCount(1, 'data');
 
         // 3. Update user
-        $updateResponse = $this->actingAs($this->admin, 'sanctum')->putJson(route('admin.users.update', $userId), [
+        $updateResponse = $this->actingAs($this->admin, 'sanctum')->putJson(route('admin.api.users.update', $userId), [
             'name' => 'Teller Diperbarui',
             'role' => 'teller',
         ]);
@@ -59,21 +59,21 @@ class AdminManagementTest extends TestCase
             ->assertJsonPath('user.name', 'Teller Diperbarui');
 
         // 4. Delete user
-        $deleteResponse = $this->actingAs($this->admin, 'sanctum')->deleteJson(route('admin.users.destroy', $userId));
+        $deleteResponse = $this->actingAs($this->admin, 'sanctum')->deleteJson(route('admin.api.users.destroy', $userId));
         $deleteResponse->assertOk();
         $this->assertDatabaseMissing('users', ['id' => $userId]);
     }
 
     public function test_admin_cannot_delete_self(): void
     {
-        $response = $this->actingAs($this->admin, 'sanctum')->deleteJson(route('admin.users.destroy', $this->admin->id));
+        $response = $this->actingAs($this->admin, 'sanctum')->deleteJson(route('admin.api.users.destroy', $this->admin->id));
         $response->assertUnprocessable();
     }
 
     public function test_admin_can_crud_members(): void
     {
         // 1. Create a member
-        $storeResponse = $this->actingAs($this->admin, 'sanctum')->postJson(route('admin.members.store'), [
+        $storeResponse = $this->actingAs($this->admin, 'sanctum')->postJson(route('admin.api.members.store'), [
             'student_name' => 'Ahmad Santoso',
             'email' => 'ahmad@bankmini.test',
             'username' => 'ahmad2026',
@@ -87,7 +87,7 @@ class AdminManagementTest extends TestCase
         $memberId = $storeResponse->json('member.id');
 
         // 2. Update member
-        $updateResponse = $this->actingAs($this->admin, 'sanctum')->putJson(route('admin.members.update', $memberId), [
+        $updateResponse = $this->actingAs($this->admin, 'sanctum')->putJson(route('admin.api.members.update', $memberId), [
             'student_name' => 'Ahmad Santoso SP',
             'graduation_year' => '2027',
         ]);
@@ -96,24 +96,24 @@ class AdminManagementTest extends TestCase
             ->assertJsonPath('member.graduation_year', '2027');
 
         // 3. Delete member
-        $deleteResponse = $this->actingAs($this->admin, 'sanctum')->deleteJson(route('admin.members.destroy', $memberId));
+        $deleteResponse = $this->actingAs($this->admin, 'sanctum')->deleteJson(route('admin.api.members.destroy', $memberId));
         $deleteResponse->assertOk();
         $this->assertDatabaseMissing('members', ['id' => $memberId]);
     }
 
     public function test_admin_can_view_journal_audit_and_summary(): void
     {
-        $indexResponse = $this->actingAs($this->admin, 'sanctum')->getJson(route('admin.audit-journals.index'));
+        $indexResponse = $this->actingAs($this->admin, 'sanctum')->getJson(route('admin.api.audit-journals.index'));
         $indexResponse->assertOk();
 
-        $summaryResponse = $this->actingAs($this->admin, 'sanctum')->getJson(route('admin.audit-journals.summary'));
+        $summaryResponse = $this->actingAs($this->admin, 'sanctum')->getJson(route('admin.api.audit-journals.summary'));
         $summaryResponse->assertOk()
             ->assertJsonStructure(['total_debit', 'total_credit', 'is_balanced']);
     }
 
     public function test_admin_can_read_system_settings(): void
     {
-        $response = $this->actingAs($this->admin, 'sanctum')->getJson(route('admin.system-settings'));
+        $response = $this->actingAs($this->admin, 'sanctum')->getJson(route('admin.api.system-settings'));
         $response->assertOk()
             ->assertJsonPath('min_maintaining_balance', 10000)
             ->assertJsonPath('min_initial_deposit', 10000);

@@ -2,7 +2,10 @@
 
 namespace Tests\Feature;
 
+use App\Enums\CashClosureStatus;
+use App\Enums\JournalEntryType;
 use App\Enums\Role;
+use App\Models\CashClosure;
 use App\Models\Member;
 use App\Models\Saver;
 use App\Models\User;
@@ -207,5 +210,97 @@ class AdminWebScreensTest extends TestCase
     {
         $response = $this->actingAs($this->admin)->get('/dashboard');
         $response->assertRedirect('/admin/dashboard');
+    }
+
+    public function test_admin_web_route_names_do_not_collide_with_api_routes(): void
+    {
+        $closure = CashClosure::create([
+            'teller_id' => $this->teller->id,
+            'closure_date' => today(),
+            'opening_balance' => 0,
+            'total_deposit' => 50000,
+            'total_withdrawal' => 0,
+            'system_ending_balance' => 50000,
+            'physical_ending_balance' => 50000,
+            'difference' => 0,
+            'status' => CashClosureStatus::Submitted,
+        ]);
+
+        $this->assertSame('/admin/cash-closures/'.$closure->id, route('admin.cash-closures.show', $closure, false));
+        $this->assertSame('/admin/cash-closures/'.$closure->id.'/process', route('admin.cash-closures.process', $closure, false));
+        $this->assertSame('/admin/audit-journals', route('admin.audit-journals.index', [], false));
+        $this->assertSame('/admin/members', route('admin.members.index', [], false));
+        $this->assertSame('/admin/users', route('admin.users.index', [], false));
+
+        $this->assertSame('/api/admin/cash-closures/'.$closure->id, route('admin.api.cash-closures.show', $closure, false));
+        $this->assertSame('/api/admin/cash-closures/'.$closure->id.'/process', route('admin.api.cash-closures.process', $closure, false));
+    }
+
+    public function test_admin_can_open_cash_closure_detail_from_dashboard_and_index_and_approve_via_web(): void
+    {
+        $closure = CashClosure::create([
+            'teller_id' => $this->teller->id,
+            'closure_date' => today(),
+            'opening_balance' => 0,
+            'total_deposit' => 200000,
+            'total_withdrawal' => 150000,
+            'system_ending_balance' => 50000,
+            'physical_ending_balance' => 50000,
+            'difference' => 0,
+            'status' => CashClosureStatus::Submitted,
+        ]);
+
+        $expectedShowUrl = route('admin.cash-closures.show', $closure);
+        $expectedProcessUrl = route('admin.cash-closures.process', $closure);
+
+        // 1. Dashboard "Periksa & ACC" links to the web detail route
+        $this->actingAs($this->admin)
+            ->get(route('admin.dashboard'))
+            ->assertOk()
+            ->assertSee('Periksa & ACC', false)
+            ->assertSee('href="'.$expectedShowUrl.'"', false);
+
+        // 2. Cash closures index "Periksa & Otorisasi" links to the web detail route
+        $this->actingAs($this->admin)
+            ->get(route('admin.cash-closures.index'))
+            ->assertOk()
+            ->assertSee('Periksa & Otorisasi', false)
+            ->assertSee('href="'.$expectedShowUrl.'"', false);
+
+        // 3. Visiting the detail route renders the authorization page with the web process action
+        $this->actingAs($this->admin)
+            ->get($expectedShowUrl)
+            ->assertOk()
+            ->assertViewIs('admin.cash-closures.show')
+            ->assertSee('Otorisasi Penutupan Kas')
+            ->assertSee('action="'.$expectedProcessUrl.'"', false);
+
+        // 4. Submitting approval redirects back to index with success and records vault transfer journals
+        $processResponse = $this->actingAs($this->admin)
+            ->post($expectedProcessUrl, [
+                'approve' => '1',
+                'reason' => 'Sesuai fisik di brankas',
+            ]);
+
+        $processResponse->assertRedirect(route('admin.cash-closures.index'));
+        $processResponse->assertSessionHas('success');
+
+        $closure->refresh();
+        $this->assertSame(CashClosureStatus::Approved, $closure->status);
+        $this->assertSame($this->admin->id, $closure->approved_by);
+
+        $this->assertDatabaseHas('journal_entries', [
+            'cash_closure_id' => $closure->id,
+            'account_code' => '102',
+            'type' => JournalEntryType::Debit->value,
+            'amount' => 50000,
+        ]);
+
+        $this->assertDatabaseHas('journal_entries', [
+            'cash_closure_id' => $closure->id,
+            'account_code' => '101',
+            'type' => JournalEntryType::Credit->value,
+            'amount' => 50000,
+        ]);
     }
 }

@@ -97,7 +97,7 @@ class AdminMemberImportTest extends TestCase
         $csvContent = "NIS,Nama Siswa,Kelas\n99003,Gajah Mada,X RPL 2\n";
         $file = UploadedFile::fake()->createWithContent('data.csv', $csvContent);
 
-        $response = $this->actingAs($this->admin, 'sanctum')->postJson(route('admin.members.import'), [
+        $response = $this->actingAs($this->admin, 'sanctum')->postJson(route('admin.api.members.import'), [
             'file' => $file,
         ]);
 
