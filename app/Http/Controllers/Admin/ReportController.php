@@ -35,7 +35,13 @@ class ReportController extends Controller
             $activeSaversCount = Saver::where('status', 'active')->count();
             $totalSavings = (int) Saver::where('status', 'active')->sum('balance');
 
+            $closures = collect();
             $closure = null;
+            $tellerNames = $transactions->pluck('teller.name')
+                ->filter()
+                ->unique()
+                ->values()
+                ->all();
         } else {
             // Daily Report
             $transactions = Transaction::with(['saver' => fn ($q) => $q->withTrashed()->with('user'), 'teller'])
@@ -51,10 +57,17 @@ class ReportController extends Controller
             $activeSaversCount = Saver::where('status', 'active')->count();
             $totalSavings = (int) Saver::where('status', 'active')->sum('balance');
 
-            $closure = CashClosure::with(['teller', 'approver'])
+            $closures = CashClosure::with(['teller', 'approver'])
                 ->whereDate('closure_date', $date)
-                ->latest()
-                ->first();
+                ->orderBy('id')
+                ->get();
+            $closure = $closures->first();
+            $tellerNames = $closures->pluck('teller.name')
+                ->merge($transactions->pluck('teller.name'))
+                ->filter()
+                ->unique()
+                ->values()
+                ->all();
         }
 
         return view('admin.reports.index', compact(
@@ -69,7 +82,9 @@ class ReportController extends Controller
             'transactionCount',
             'activeSaversCount',
             'totalSavings',
-            'closure'
+            'closure',
+            'closures',
+            'tellerNames'
         ));
     }
 }

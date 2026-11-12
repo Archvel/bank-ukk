@@ -15,34 +15,12 @@ class CloseCashAction
     public function handle(User $teller, int $physicalEndingBalance, ?string $notes = null): CashClosure
     {
         $today = today();
+        $todayClosure = $this->findTodayClosure($teller, $today);
+        $openingBalance = $this->resolveOpeningBalance($teller, $today, $todayClosure);
+        $trxSummary = $this->summarizeDailyTransactions($teller, $today);
 
-        $todayClosure = CashClosure::where('teller_id', $teller->id)
-            ->whereDate('closure_date', $today)
-            ->first();
-
-        if ($todayClosure !== null) {
-            $openingBalance = (int) $todayClosure->opening_balance;
-        } else {
-            // Get opening balance from previous day's approved closure, or default to 0
-            $previousApprovedClosure = CashClosure::where('teller_id', $teller->id)
-                ->where('closure_date', '<', $today)
-                ->where('status', CashClosureStatus::Approved)
-                ->orderByDesc('closure_date')
-                ->first();
-
-            $openingBalance = $previousApprovedClosure ? (int) $previousApprovedClosure->physical_ending_balance : 0;
-        }
-
-        $trxSummary = Transaction::where('teller_id', $teller->id)
-            ->whereDate('created_at', $today)
-            ->selectRaw('
-                SUM(CASE WHEN type = "deposit" THEN amount ELSE 0 END) as total_deposit,
-                SUM(CASE WHEN type = "withdrawal" THEN amount ELSE 0 END) as total_withdrawal
-            ')
-            ->first();
-
-        $totalDeposit = (int) ($trxSummary?->total_deposit ?? 0);
-        $totalWithdrawal = (int) ($trxSummary?->total_withdrawal ?? 0);
+        $totalDeposit = $trxSummary['total_deposit'];
+        $totalWithdrawal = $trxSummary['total_withdrawal'];
 
         $systemEndingBalance = $openingBalance + $totalDeposit - $totalWithdrawal;
         $difference = $physicalEndingBalance - $systemEndingBalance;
@@ -73,33 +51,12 @@ class CloseCashAction
     public function preview(User $teller): array
     {
         $today = today();
+        $todayClosure = $this->findTodayClosure($teller, $today);
+        $openingBalance = $this->resolveOpeningBalance($teller, $today, $todayClosure);
+        $trxSummary = $this->summarizeDailyTransactions($teller, $today);
 
-        $todayClosure = CashClosure::where('teller_id', $teller->id)
-            ->whereDate('closure_date', $today)
-            ->first();
-
-        if ($todayClosure !== null) {
-            $openingBalance = (int) $todayClosure->opening_balance;
-        } else {
-            $previousApprovedClosure = CashClosure::where('teller_id', $teller->id)
-                ->where('closure_date', '<', $today)
-                ->where('status', CashClosureStatus::Approved)
-                ->orderByDesc('closure_date')
-                ->first();
-
-            $openingBalance = $previousApprovedClosure ? (int) $previousApprovedClosure->physical_ending_balance : 0;
-        }
-
-        $trxSummary = Transaction::where('teller_id', $teller->id)
-            ->whereDate('created_at', $today)
-            ->selectRaw('
-                SUM(CASE WHEN type = "deposit" THEN amount ELSE 0 END) as total_deposit,
-                SUM(CASE WHEN type = "withdrawal" THEN amount ELSE 0 END) as total_withdrawal
-            ')
-            ->first();
-
-        $totalDeposit = (int) ($trxSummary?->total_deposit ?? 0);
-        $totalWithdrawal = (int) ($trxSummary?->total_withdrawal ?? 0);
+        $totalDeposit = $trxSummary['total_deposit'];
+        $totalWithdrawal = $trxSummary['total_withdrawal'];
 
         $systemEndingBalance = $openingBalance + $totalDeposit - $totalWithdrawal;
 
@@ -111,5 +68,38 @@ class CloseCashAction
             'has_session_opened' => ($todayClosure !== null),
             'closure_status' => $todayClosure?->status?->value,
         ];
+    }
+
+    private function findTodayClosure(User $teller, mixed $today): ?CashClosure
+    {
+        return CashClosure::where('teller_id', $teller->id)
+            ->whereDate('closure_date', $today)
+            ->first();
+    }
+
+    private function resolveOpeningBalance(User $teller, mixed $today, ?CashClosure $todayClosure): int
+    {
+        if ($todayClosure !== null) {
+            return (int) $todayClosure->opening_balance;
+        }
+
+        $previousApprovedClosure = CashClosure::where('teller_id', $teller->id)
+            ->where('closure_date', '<', $today)
+            ->where('status', CashClosureStatus::Approved)
+            ->orderByDesc('closure_date')
+            ->first();
+
+        return $previousApprovedClosure ? (int) $previousApprovedClosure->physical_ending_balance : 0;
+    }
+
+    /**
+     * @return array{count: int, total_deposit: int, total_withdrawal: int}
+     */
+    private function summarizeDailyTransactions(User $teller, mixed $today): array
+    {
+        $query = Transaction::where('teller_id', $teller->id)
+            ->whereDate('created_at', $today);
+
+        return Transaction::summarizeTotals($query);
     }
 }

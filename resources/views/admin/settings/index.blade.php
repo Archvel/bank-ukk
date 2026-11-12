@@ -3,8 +3,8 @@
         cameraActive: false,
         stream: null,
         cameraError: null,
-        autoSubmit: true,
-        beepSound: true,
+        autoSubmit: {{ old('scanner_auto_submit', $scannerAutoSubmit ?? true) ? 'true' : 'false' }},
+        beepSound: {{ old('scanner_beep_sound', $scannerBeepSound ?? true) ? 'true' : 'false' }},
         async startCamera() {
             this.cameraError = null;
             if (this.cameraActive) {
@@ -36,8 +36,10 @@
                 <p class="text-sm text-slate-500 mt-0.5">Pengaturan batasan keuangan, integrasi perangkat keras scanner loket, dan hak akses keamanan RBAC.</p>
             </div>
             <div class="flex items-center gap-3">
-                <form method="POST" action="{{ route('admin.settings.update') }}">
+                <form id="settingsForm" method="POST" action="{{ route('admin.settings.update') }}">
                     @csrf
+                    <input type="hidden" name="scanner_auto_submit" :value="autoSubmit ? 1 : 0">
+                    <input type="hidden" name="scanner_beep_sound" :value="beepSound ? 1 : 0">
                     <button type="submit" 
                             class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold bg-[#059669] text-white hover:bg-emerald-700 shadow-md shadow-emerald-950/20 transition">
                         <span class="material-symbols-outlined text-[18px]">save</span>
@@ -111,7 +113,9 @@
                         <div class="relative">
                             <span class="absolute left-3 top-2.5 font-bold font-mono text-slate-500">Rp</span>
                             <input type="text" 
-                                   value="10.000" 
+                                   name="min_initial_deposit"
+                                   form="settingsForm"
+                                   value="{{ old('min_initial_deposit', number_format($minInitialDeposit ?? 10000, 0, ',', '.')) }}" 
                                    class="w-full pl-10 pr-4 py-2 text-xs font-mono font-bold rounded-xl border-slate-200 bg-slate-50 text-slate-800 focus:border-emerald-500 focus:ring-emerald-500">
                         </div>
                         <p class="text-[11px] text-slate-400 mt-1">Nominal setoran fisik pertama yang otomatis menerbitkan nomor rekening Saver oleh teller.</p>
@@ -133,7 +137,9 @@
                         <div class="relative">
                             <span class="absolute left-3 top-2.5 font-bold font-mono text-slate-500">Rp</span>
                             <input type="text" 
-                                   value="500.000" 
+                                   name="daily_withdraw_limit"
+                                   form="settingsForm"
+                                   value="{{ old('daily_withdraw_limit', number_format($dailyWithdrawLimit ?? 500000, 0, ',', '.')) }}" 
                                    class="w-full pl-10 pr-4 py-2 text-xs font-mono font-bold rounded-xl border-slate-200 bg-slate-50 text-slate-800 focus:border-emerald-500 focus:ring-emerald-500">
                         </div>
                         <p class="text-[11px] text-slate-400 mt-1">Penarikan di atas limit ini mewajibkan konfirmasi ganda di loket kasir.</p>

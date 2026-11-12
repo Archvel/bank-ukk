@@ -49,9 +49,9 @@ class SetOpeningCashAction
 
         $now = now(self::TIMEZONE);
         $start = $now->copy()->setTime(7, 0, 0);
-        $end = $now->copy()->setTime(15 + 30, 0);
+        $end = $now->copy()->setTime(15, 30, 0);
 
-        if ($enforceOperatingHours && !$now->betweenIncluded($start, $end)) {
+        if ($enforceOperatingHours && ! $now->betweenIncluded($start, $end)) {
             $currentTimeStr = $now->format('H:i');
             if ($now->lt($start)) {
                 throw ValidationException::withMessages([
@@ -76,16 +76,12 @@ class SetOpeningCashAction
             ]);
         }
 
-        $trxSummary = Transaction::where('teller_id', $teller->id)
-            ->whereDate('created_at', $today)
-            ->selectRaw('
-                SUM(CASE WHEN type = "deposit" THEN amount ELSE 0 END) as total_deposit,
-                SUM(CASE WHEN type = "withdrawal" THEN amount ELSE 0 END) as total_withdrawal
-            ')
-            ->first();
+        $trxSummary = Transaction::summarizeTotals(
+            Transaction::where('teller_id', $teller->id)->whereDate('created_at', $today)
+        );
 
-        $totalDeposit = (int) ($trxSummary?->total_deposit ?? 0);
-        $totalWithdrawal = (int) ($trxSummary?->total_withdrawal ?? 0);
+        $totalDeposit = $trxSummary['total_deposit'];
+        $totalWithdrawal = $trxSummary['total_withdrawal'];
         $systemEndingBalance = $openingBalance + $totalDeposit - $totalWithdrawal;
 
         return CashClosure::updateOrCreate(

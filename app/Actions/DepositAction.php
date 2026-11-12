@@ -6,6 +6,7 @@ use App\Enums\SaverStatus;
 use App\Enums\TransactionType;
 use App\Models\Member;
 use App\Models\Saver;
+use App\Models\SystemSetting;
 use App\Models\Transaction;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
@@ -41,9 +42,12 @@ class DepositAction
         return DB::transaction(function () use ($teller, $amount, $member, $saver, $pin, $notes) {
             // Case 1: Initial deposit from an inactive Member (Account Activation)
             if ($member !== null) {
-                if ($amount < 10000) {
+                $minInitialDeposit = SystemSetting::getInt('min_initial_deposit', SystemSetting::DEFAULT_MIN_INITIAL_DEPOSIT);
+                if ($amount < $minInitialDeposit) {
+                    $formattedMin = number_format($minInitialDeposit, 0, ',', '.');
+
                     throw ValidationException::withMessages([
-                        'amount' => 'Setoran awal untuk aktivasi rekening penabung minimal Rp10.000.',
+                        'amount' => "Setoran awal untuk aktivasi rekening penabung minimal Rp{$formattedMin}.",
                     ]);
                 }
 
@@ -89,9 +93,7 @@ class DepositAction
                 'balance' => $closingBalance,
             ]);
 
-            $dateStr = now()->format('Ymd');
-            $count = Transaction::whereDate('created_at', today())->count() + 1;
-            $transactionNumber = sprintf('TRX-%s-%04d', $dateStr, $count);
+            $transactionNumber = Transaction::generateNextNumber();
 
             $transaction = Transaction::create([
                 'transaction_number' => $transactionNumber,

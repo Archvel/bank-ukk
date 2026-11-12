@@ -71,9 +71,7 @@ class WithdrawAction
                 'balance' => $closingBalance,
             ]);
 
-            $dateStr = now()->format('Ymd');
-            $count = Transaction::whereDate('created_at', today())->count() + 1;
-            $transactionNumber = sprintf('TRX-%s-%04d', $dateStr, $count);
+            $transactionNumber = Transaction::generateNextNumber();
 
             $transaction = Transaction::create([
                 'transaction_number' => $transactionNumber,

@@ -12,6 +12,7 @@ use App\Http\Requests\DepositRequest;
 use App\Http\Requests\WithdrawRequest;
 use App\Models\Member;
 use App\Models\Saver;
+use App\Models\SystemSetting;
 use App\Models\Transaction;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
@@ -40,7 +41,7 @@ class CounterController extends Controller
         $todayTrxCount = Transaction::where('teller_id', $teller->id)->whereDate('created_at', today())->count();
 
         $minMaintainingBalance = WithdrawAction::MINIMUM_MAINTAINING_BALANCE;
-        $minInitialDeposit = 10000;
+        $minInitialDeposit = SystemSetting::getInt('min_initial_deposit', SystemSetting::DEFAULT_MIN_INITIAL_DEPOSIT);
 
         // Recent 5 transactions by this teller for quick reference
         $recentTransactions = Transaction::with(['saver.user', 'teller'])
@@ -169,6 +170,8 @@ class CounterController extends Controller
             ->first();
 
         if ($member) {
+            $minInitialDeposit = SystemSetting::getInt('min_initial_deposit', SystemSetting::DEFAULT_MIN_INITIAL_DEPOSIT);
+
             return response()->json([
                 'success' => true,
                 'type' => 'member',
@@ -184,9 +187,9 @@ class CounterController extends Controller
                     'account_status' => $member->account_status->value,
                     'username' => $member->user?->username ?? '-',
                     'email' => $member->user?->email ?? '-',
-                    'min_initial_deposit' => 10000,
-                    'formatted_min_initial_deposit' => 'Rp10.000',
-                    'message' => 'Siswa calon penabung belum memiliki rekening aktif. Lakukan setoran awal minimal Rp10.000 dan input 6-digit PIN untuk mengaktifkan rekening.',
+                    'min_initial_deposit' => $minInitialDeposit,
+                    'formatted_min_initial_deposit' => 'Rp'.number_format($minInitialDeposit, 0, ',', '.'),
+                    'message' => 'Siswa calon penabung belum memiliki rekening aktif. Lakukan setoran awal minimal Rp'.number_format($minInitialDeposit, 0, ',', '.').' dan input 6-digit PIN untuk mengaktifkan rekening.',
                 ],
             ]);
         }

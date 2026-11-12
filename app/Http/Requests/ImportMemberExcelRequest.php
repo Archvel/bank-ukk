@@ -29,8 +29,8 @@ class ImportMemberExcelRequest extends FormRequest
                 'max:10240',
                 function ($attribute, $value, $fail) {
                     $ext = strtolower($value->getClientOriginalExtension());
-                    if (! in_array($ext, ['xlsx', 'xls', 'csv', 'txt'])) {
-                        $fail('Berkas harus berformat Excel (.xlsx, .xls) atau .csv.');
+                    if (! in_array($ext, ['xlsx', 'csv', 'txt'])) {
+                        $fail('Berkas harus berformat Excel modern (.xlsx) atau .csv (format .xls lama tidak didukung).');
                     }
                 },
             ],

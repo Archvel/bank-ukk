@@ -43,18 +43,13 @@ class TransactionHistoryController extends Controller
         $transactions = $query->paginate(20)->withQueryString();
 
         // Summary KPI calculations for today's teller shift in a single query
-        $summary = Transaction::where('teller_id', $teller->id)
-            ->whereDate('created_at', today())
-            ->selectRaw('
-                COUNT(*) as count,
-                SUM(CASE WHEN type = "deposit" THEN amount ELSE 0 END) as total_deposit,
-                SUM(CASE WHEN type = "withdrawal" THEN amount ELSE 0 END) as total_withdrawal
-            ')
-            ->first();
+        $summary = Transaction::summarizeTotals(
+            Transaction::where('teller_id', $teller->id)->whereDate('created_at', today())
+        );
 
-        $totalTransactionsCount = (int) ($summary?->count ?? 0);
-        $totalDepositAmount = (int) ($summary?->total_deposit ?? 0);
-        $totalWithdrawalAmount = (int) ($summary?->total_withdrawal ?? 0);
+        $totalTransactionsCount = $summary['count'];
+        $totalDepositAmount = $summary['total_deposit'];
+        $totalWithdrawalAmount = $summary['total_withdrawal'];
         $netCashFlow = $totalDepositAmount - $totalWithdrawalAmount;
 
         return view('teller.transactions.index', compact(

@@ -231,7 +231,12 @@
                 <div class="h-16 flex items-center justify-center">
                     <span class="text-[10px] font-mono text-slate-400 italic">[ Verified Digital Signature ]</span>
                 </div>
-                <p class="font-bold text-slate-900 underline">{{ $closure->teller->name ?? 'Petugas Loket Kasir' }}</p>
+                @php
+                    $tellerSignOffName = ! empty($tellerNames)
+                        ? implode(', ', $tellerNames)
+                        : ($closure?->teller?->name ?? 'Petugas Loket Kasir');
+                @endphp
+                <p class="font-bold text-slate-900 underline">{{ $tellerSignOffName }}</p>
                 <p class="text-[10px] text-slate-500">NIP/NISN: 20240901-LOKET</p>
             </div>
 

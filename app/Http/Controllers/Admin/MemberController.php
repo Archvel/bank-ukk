@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Actions\DeleteMemberAction;
 use App\Actions\PromoteStudentsAction;
 use App\Enums\MemberAccountStatus;
 use App\Enums\Role;
@@ -152,26 +153,19 @@ class MemberController extends Controller
         return redirect('/admin/members')->with('success', 'Data calon penabung berhasil diperbarui.');
     }
 
-    public function destroy(Member $member): RedirectResponse|JsonResponse
+    public function destroy(Member $member, DeleteMemberAction $deleteMemberAction): RedirectResponse|JsonResponse
     {
         if (request()->wantsJson()) {
-            return app(ApiMemberController::class)->destroy($member);
+            return app(ApiMemberController::class)->destroy($member, $deleteMemberAction);
         }
 
-        if ($member->saver && $member->saver->transactions()->exists()) {
-            return back()->with('error', 'Member tidak dapat dihapus karena sudah memiliki buku rekening dan riwayat transaksi finansial.');
+        $result = $deleteMemberAction->handle($member);
+
+        if (! $result['deleted']) {
+            return back()->with('error', $result['message']);
         }
 
-        DB::transaction(function () use ($member) {
-            if ($member->saver) {
-                $member->saver->delete();
-            }
-            $user = $member->user;
-            $member->delete();
-            $user?->delete();
-        });
-
-        return redirect('/admin/members')->with('success', 'Data calon penabung berhasil dihapus.');
+        return redirect('/admin/members')->with('success', $result['message']);
     }
 
     public function promote(Request $request, PromoteStudentsAction $action): RedirectResponse|JsonResponse

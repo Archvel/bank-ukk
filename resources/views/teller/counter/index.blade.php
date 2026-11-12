@@ -1,6 +1,6 @@
 <x-teller-layout title="Meja Layanan Loket" :drawer-balance="$drawerBalance">
     <div class="max-w-[1700px] mx-auto p-4 lg:p-6 space-y-4" 
-         x-data="posCounter()"
+         x-data="posCounter({{ (int) ($minInitialDeposit ?? 10000) }})"
          @keydown.window.f10.prevent="if(!showPinModal && !showReceiptModal) openPinModal()">
 
         <!-- Sesi Loket & Kas Awal Status Bar (Satu Baris Ringkas & Terpadu) -->
@@ -714,8 +714,9 @@
     <!-- HTML5 QR Code Scanner Library for Browser Webcam (Scoped strictly to Counter) -->
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
     <script>
-        function posCounter() {
+        function posCounter(initialMinDeposit = 10000) {
             return {
+                minInitialDeposit: initialMinDeposit,
                 lookupMode: 'saver',
                 searchQuery: '',
                 isLoadingLookup: false,
@@ -765,7 +766,7 @@
                 get isBalanceValid() {
                     if (this.transactionType === 'deposit') {
                         if (this.isMemberMode) {
-                            return (this.amount || 0) >= 10000;
+                            return (this.amount || 0) >= this.minInitialDeposit;
                         }
                         return (this.amount || 0) > 0;
                     } else {
@@ -775,8 +776,8 @@
                 },
 
                 get balanceValidationMessage() {
-                    if (this.transactionType === 'deposit' && this.isMemberMode && (this.amount || 0) < 10000) {
-                        return 'Setoran awal untuk aktivasi rekening baru wajib minimal Rp 10.000.';
+                    if (this.transactionType === 'deposit' && this.isMemberMode && (this.amount || 0) < this.minInitialDeposit) {
+                        return 'Setoran awal untuk aktivasi rekening baru wajib minimal Rp ' + new Intl.NumberFormat('id-ID').format(this.minInitialDeposit) + '.';
                     }
                     if (this.transactionType === 'withdrawal' && this.estimatedBalance < 10000) {
                         return 'Penarikan melebihi batas! Sisa saldo minimal mengendap wajib Rp 10.000.';
@@ -830,7 +831,8 @@
                                 this.identifiedUser = { type: 'member', ...res.member };
                                 this.lookupMode = 'member';
                                 this.transactionType = 'deposit';
-                                this.amount = Math.max(this.amount || 0, 10000);
+                                this.minInitialDeposit = res.member.min_initial_deposit || this.minInitialDeposit;
+                                this.amount = Math.max(this.amount || 0, this.minInitialDeposit);
                             }
                         } else {
                             alert(res.message || 'Nasabah tidak ditemukan.');

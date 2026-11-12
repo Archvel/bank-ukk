@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Admin;
 
+use App\Actions\DeleteUserAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\UpdateUserRequest;
@@ -88,22 +89,15 @@ class UserController extends Controller
     /**
      * Remove the specified user from storage.
      */
-    public function destroy(Request $request, User $user): JsonResponse
+    public function destroy(Request $request, User $user, DeleteUserAction $deleteUserAction): JsonResponse
     {
-        if ($user->id === $request->user()?->id) {
+        $result = $deleteUserAction->handle($user, $request->user());
+
+        if (! $result['deleted']) {
             return response()->json([
-                'message' => 'Anda tidak dapat menghapus akun Anda sendiri.',
+                'message' => $result['message'],
             ], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
-
-        // Check if user has associated transactions or records
-        if ($user->tellerTransactions()->exists() || ($user->saver && $user->saver->transactions()->exists())) {
-            return response()->json([
-                'message' => 'Pengguna tidak dapat dihapus karena memiliki riwayat audit finansial.',
-            ], Response::HTTP_UNPROCESSABLE_ENTITY);
-        }
-
-        $user->delete();
 
         return response()->json([
             'message' => 'Pengguna berhasil dihapus.',

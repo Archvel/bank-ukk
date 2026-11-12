@@ -5,6 +5,8 @@ namespace Tests\Feature;
 use App\Enums\MemberAccountStatus;
 use App\Enums\Role;
 use App\Models\User;
+use App\Services\MemberExcelImportService;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Tests\TestCase;
@@ -137,6 +139,65 @@ class AdminMemberImportTest extends TestCase
             'major' => 'DKV',
             'account_status' => MemberAccountStatus::Inactive,
         ]);
+    }
+
+    public function test_legacy_xls_upload_is_rejected_with_clear_validation_and_service_error(): void
+    {
+        $fakeXls = UploadedFile::fake()->create('siswa.xls', 10, 'application/vnd.ms-excel');
+
+        $response = $this->actingAs($this->admin)
+            ->from('/admin/members')
+            ->post('/admin/members/import', [
+                'file' => $fakeXls,
+            ]);
+
+        $response->assertRedirect('/admin/members');
+        $response->assertSessionHasErrors(['file']);
+
+        $serviceResult = app(MemberExcelImportService::class)->import($fakeXls);
+        $this->assertFalse($serviceResult['success']);
+        $this->assertSame(0, $serviceResult['imported']);
+        $this->assertStringContainsString('.xls', $serviceResult['errors'][0]);
+    }
+
+    public function test_import_infers_graduation_and_academic_year_dynamically_by_school_calendar(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2027-08-10 09:00:00', 'Asia/Jakarta'));
+
+        try {
+            $csvContent = "NIS,Nama Siswa,Kelas\n".
+                          "99101,Siswa Baru X,X RPL 1\n".
+                          "99102,Siswa XI,XI BD 1\n".
+                          "99103,Siswa XII,XII AK 1\n";
+            $file = UploadedFile::fake()->createWithContent('tahun_ajaran_baru.csv', $csvContent);
+
+            $response = $this->actingAs($this->admin)->post('/admin/members/import', [
+                'file' => $file,
+            ]);
+
+            $response->assertRedirect('/admin/members');
+            $response->assertSessionHas('success');
+
+            $this->assertDatabaseHas('members', [
+                'nis' => '99101',
+                'graduation_year' => '2030',
+                'academic_year' => '2027 - 2028',
+            ]);
+
+            $this->assertDatabaseHas('members', [
+                'nis' => '99102',
+                'graduation_year' => '2029',
+                'academic_year' => '2027 - 2028',
+            ]);
+
+            $this->assertDatabaseHas('members', [
+                'nis' => '99103',
+                'graduation_year' => '2028',
+                'academic_year' => '2027 - 2028',
+            ]);
+        } finally {
+            Carbon::setTestNow(null);
+        }
     }
 
     /**

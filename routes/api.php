@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\Teller\MemberLookupController as TellerMemberLookup
 use App\Http\Controllers\Api\Teller\OpeningCashController as TellerOpeningCashController;
 use App\Http\Controllers\Api\Teller\SaverLookupController as TellerSaverLookupController;
 use App\Http\Controllers\Api\Teller\TransactionController as TellerTransactionController;
+use App\Models\SystemSetting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
@@ -140,7 +141,8 @@ Route::middleware('auth:sanctum')->group(function (): void {
         Route::get('/system-settings', function () {
             return response()->json([
                 'min_maintaining_balance' => WithdrawAction::MINIMUM_MAINTAINING_BALANCE,
-                'min_initial_deposit' => 10000,
+                'min_initial_deposit' => SystemSetting::getInt('min_initial_deposit', SystemSetting::DEFAULT_MIN_INITIAL_DEPOSIT),
+                'daily_withdraw_limit' => SystemSetting::getInt('daily_withdraw_limit', SystemSetting::DEFAULT_DAILY_WITHDRAW_LIMIT),
                 'app_name' => 'Bank Mini',
             ]);
         })->name('system-settings');

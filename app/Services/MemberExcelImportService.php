@@ -33,8 +33,16 @@ class MemberExcelImportService
         $rows = [];
         if ($extension === 'xlsx') {
             $rows = $this->parseXlsx($filePath);
-        } else {
+        } elseif (in_array($extension, ['csv', 'txt'], true)) {
             $rows = $this->parseCsv($filePath);
+        } else {
+            return [
+                'success' => false,
+                'total_rows' => 0,
+                'imported' => 0,
+                'skipped' => 0,
+                'errors' => ["Format berkas .{$extension} tidak didukung. Simpan berkas sebagai .xlsx atau .csv."],
+            ];
         }
 
         if (empty($rows)) {
@@ -167,26 +175,15 @@ class MemberExcelImportService
                 }
             }
 
-            // Determine/Infer Graduation Year if missing
+            // Determine/Infer Graduation Year & Academic Year dynamically using school calendar (Jul-Jun)
+            $academicStartYear = $this->resolveAcademicStartYear();
+
             if (empty($graduationYear)) {
-                if (! empty($className)) {
-                    if (str_starts_with($className, 'X ')) {
-                        $graduationYear = '2029';
-                    } elseif (str_starts_with($className, 'XI ')) {
-                        $graduationYear = '2028';
-                    } elseif (str_starts_with($className, 'XII ')) {
-                        $graduationYear = '2027';
-                    }
-                }
-                if (empty($graduationYear)) {
-                    $graduationYear = (string) (date('Y') + 3);
-                }
+                $graduationYear = $this->inferGraduationYear($className, $academicStartYear);
             }
 
-            // Determine Academic Year if missing
             if (empty($academicYear)) {
-                $currentYear = (int) date('Y');
-                $academicYear = "{$currentYear} - ".($currentYear + 1);
+                $academicYear = "{$academicStartYear} - ".($academicStartYear + 1);
             }
 
             // Absen integer cast
@@ -553,5 +550,39 @@ class MemberExcelImportService
         }
 
         return $output;
+    }
+
+    /**
+     * Resolve the starting calendar year of the active school academic year (Jul-Jun).
+     */
+    protected function resolveAcademicStartYear(): int
+    {
+        $now = now();
+
+        return $now->month >= 7 ? $now->year : ($now->year - 1);
+    }
+
+    /**
+     * Infer expected graduation year dynamically from class level and academic year.
+     */
+    protected function inferGraduationYear(?string $className, int $academicStartYear): string
+    {
+        if (! empty($className)) {
+            $trimmed = trim($className);
+
+            if (preg_match('/^(XII|12)\b/i', $trimmed)) {
+                return (string) ($academicStartYear + 1);
+            }
+
+            if (preg_match('/^(XI|11)\b/i', $trimmed)) {
+                return (string) ($academicStartYear + 2);
+            }
+
+            if (preg_match('/^(X|10)\b/i', $trimmed)) {
+                return (string) ($academicStartYear + 3);
+            }
+        }
+
+        return (string) ($academicStartYear + 3);
     }
 }

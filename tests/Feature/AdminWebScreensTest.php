@@ -2,8 +2,10 @@
 
 namespace Tests\Feature;
 
+use App\Actions\DepositAction;
 use App\Enums\CashClosureStatus;
 use App\Enums\JournalEntryType;
+use App\Enums\MemberAccountStatus;
 use App\Enums\Role;
 use App\Models\CashClosure;
 use App\Models\Member;
@@ -12,6 +14,7 @@ use App\Models\User;
 use Database\Seeders\AccountSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\ValidationException;
 use Tests\TestCase;
 
 class AdminWebScreensTest extends TestCase
@@ -302,5 +305,125 @@ class AdminWebScreensTest extends TestCase
             'type' => JournalEntryType::Credit->value,
             'amount' => 50000,
         ]);
+    }
+
+    public function test_admin_can_update_and_persist_system_settings_and_deposit_enforces_it(): void
+    {
+        $response = $this->actingAs($this->admin)
+            ->from('/admin/settings')
+            ->post(route('admin.settings.update'), [
+                'min_initial_deposit' => '25.000',
+                'daily_withdraw_limit' => '750.000',
+                'scanner_auto_submit' => '0',
+                'scanner_beep_sound' => '1',
+            ]);
+
+        $response->assertRedirect('/admin/settings');
+        $response->assertSessionHas('success');
+
+        $this->assertDatabaseHas('system_settings', ['key' => 'min_initial_deposit', 'value' => '25000']);
+        $this->assertDatabaseHas('system_settings', ['key' => 'daily_withdraw_limit', 'value' => '750000']);
+        $this->assertDatabaseHas('system_settings', ['key' => 'scanner_auto_submit', 'value' => '0']);
+        $this->assertDatabaseHas('system_settings', ['key' => 'scanner_beep_sound', 'value' => '1']);
+
+        // Settings screen and API reflect persisted values
+        $this->actingAs($this->admin)
+            ->get('/admin/settings')
+            ->assertOk()
+            ->assertSee('value="25.000"', false)
+            ->assertSee('value="750.000"', false);
+
+        $this->actingAs($this->admin, 'sanctum')
+            ->getJson(route('admin.api.system-settings'))
+            ->assertOk()
+            ->assertJsonPath('min_initial_deposit', 25000)
+            ->assertJsonPath('daily_withdraw_limit', 750000);
+
+        // Initial deposit below updated 25.000 is rejected
+        $newStudent = User::factory()->create(['role' => Role::Nasabah]);
+        $newMember = Member::create([
+            'user_id' => $newStudent->id,
+            'student_name' => 'Siswa Baru',
+            'graduation_year' => '2028',
+            'account_status' => MemberAccountStatus::Inactive,
+        ]);
+
+        $this->expectException(ValidationException::class);
+        app(DepositAction::class)->handle(
+            teller: $this->teller,
+            amount: 15000,
+            member: $newMember,
+            pin: '123456'
+        );
+    }
+
+    public function test_admin_can_delete_member_with_empty_soft_deleted_saver_via_web(): void
+    {
+        $studentUser = User::factory()->create(['role' => Role::Nasabah]);
+        $member = Member::create([
+            'user_id' => $studentUser->id,
+            'student_name' => 'Siswa Web Kosong',
+            'graduation_year' => '2028',
+            'account_status' => MemberAccountStatus::Active,
+        ]);
+        $saver = Saver::create([
+            'user_id' => $studentUser->id,
+            'member_id' => $member->id,
+            'account_number' => 'BM20267777',
+            'pin' => Hash::make('123456'),
+            'qr_code_token' => 'QR-BM20267777',
+            'balance' => 0,
+            'status' => 'active',
+        ]);
+        $saver->delete();
+
+        $response = $this->actingAs($this->admin)->delete("/admin/members/{$member->id}");
+
+        $response->assertRedirect('/admin/members');
+        $response->assertSessionHas('success');
+        $this->assertDatabaseMissing('savers', ['id' => $saver->id]);
+        $this->assertDatabaseMissing('members', ['id' => $member->id]);
+        $this->assertDatabaseMissing('users', ['id' => $studentUser->id]);
+    }
+
+    public function test_daily_report_displays_all_tellers_active_on_that_day(): void
+    {
+        $secondTeller = User::factory()->create([
+            'name' => 'Piket Teller 2',
+            'role' => Role::Teller,
+            'is_active' => true,
+        ]);
+
+        CashClosure::create([
+            'teller_id' => $this->teller->id,
+            'closure_date' => today(),
+            'opening_balance' => 0,
+            'total_deposit' => 20000,
+            'total_withdrawal' => 0,
+            'system_ending_balance' => 20000,
+            'physical_ending_balance' => 20000,
+            'difference' => 0,
+            'status' => CashClosureStatus::Submitted,
+        ]);
+
+        CashClosure::create([
+            'teller_id' => $secondTeller->id,
+            'closure_date' => today(),
+            'opening_balance' => 0,
+            'total_deposit' => 30000,
+            'total_withdrawal' => 0,
+            'system_ending_balance' => 30000,
+            'physical_ending_balance' => 30000,
+            'difference' => 0,
+            'status' => CashClosureStatus::Submitted,
+        ]);
+
+        $response = $this->actingAs($this->admin)->get(route('admin.reports.index', [
+            'type' => 'daily',
+            'date' => today()->format('Y-m-d'),
+        ]));
+
+        $response->assertOk()
+            ->assertSee('Piket Teller 1, Piket Teller 2');
     }
 }

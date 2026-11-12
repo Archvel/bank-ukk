@@ -57,15 +57,12 @@ class MutationController extends Controller
         $transactions = $query->paginate(15)->withQueryString();
 
         // 3 KPI calculations for this saver in a single query
-        $summary = Transaction::where('saver_id', $saver->id)
-            ->selectRaw('
-                SUM(CASE WHEN type = "deposit" THEN amount ELSE 0 END) as total_deposit,
-                SUM(CASE WHEN type = "withdrawal" THEN amount ELSE 0 END) as total_withdrawal
-            ')
-            ->first();
+        $summary = Transaction::summarizeTotals(
+            Transaction::where('saver_id', $saver->id)
+        );
 
-        $totalDeposit = (int) ($summary?->total_deposit ?? 0);
-        $totalWithdrawal = (int) ($summary?->total_withdrawal ?? 0);
+        $totalDeposit = $summary['total_deposit'];
+        $totalWithdrawal = $summary['total_withdrawal'];
         $currentBalance = (int) $saver->balance;
 
         return view('nasabah.mutations.index', compact(

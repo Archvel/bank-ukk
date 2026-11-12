@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Actions\DeleteUserAction;
 use App\Enums\Role;
 use App\Http\Controllers\Api\Admin\UserController as ApiUserController;
 use App\Http\Controllers\Controller;
@@ -91,23 +92,19 @@ class UserController extends Controller
         return redirect('/admin/users')->with('success', 'Data pengguna berhasil diperbarui.');
     }
 
-    public function destroy(Request $request, User $user): RedirectResponse|JsonResponse
+    public function destroy(Request $request, User $user, DeleteUserAction $deleteUserAction): RedirectResponse|JsonResponse
     {
         if ($request->wantsJson()) {
-            return app(ApiUserController::class)->destroy($request, $user);
+            return app(ApiUserController::class)->destroy($request, $user, $deleteUserAction);
         }
 
-        if ($user->id === $request->user()?->id) {
-            return back()->with('error', 'Anda tidak dapat menghapus akun Anda sendiri.');
+        $result = $deleteUserAction->handle($user, $request->user());
+
+        if (! $result['deleted']) {
+            return back()->with('error', $result['message']);
         }
 
-        if ($user->tellerTransactions()->exists() || ($user->saver && $user->saver->transactions()->exists())) {
-            return back()->with('error', 'Pengguna tidak dapat dihapus karena memiliki riwayat audit finansial transaksi.');
-        }
-
-        $user->delete();
-
-        return redirect('/admin/users')->with('success', 'Pengguna berhasil dihapus dari sistem.');
+        return redirect('/admin/users')->with('success', $result['message']);
     }
 
     public function toggleActive(Request $request, User $user): RedirectResponse

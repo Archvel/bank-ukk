@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\Admin;
 
+use App\Actions\DeleteMemberAction;
 use App\Actions\PromoteStudentsAction;
 use App\Enums\MemberAccountStatus;
 use App\Enums\Role;
@@ -138,22 +139,15 @@ class MemberController extends Controller
     /**
      * Remove the specified member from storage.
      */
-    public function destroy(Member $member): JsonResponse
+    public function destroy(Member $member, DeleteMemberAction $deleteMemberAction): JsonResponse
     {
-        if ($member->saver && $member->saver->transactions()->exists()) {
+        $result = $deleteMemberAction->handle($member);
+
+        if (! $result['deleted']) {
             return response()->json([
-                'message' => 'Member tidak dapat dihapus karena sudah memiliki buku rekening dan riwayat transaksi finansial.',
+                'message' => $result['message'],
             ], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
-
-        DB::transaction(function () use ($member) {
-            if ($member->saver) {
-                $member->saver->delete();
-            }
-            $user = $member->user;
-            $member->delete();
-            $user?->delete();
-        });
 
         return response()->json([
             'message' => 'Data member berhasil dihapus.',

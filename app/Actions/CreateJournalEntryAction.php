@@ -18,9 +18,7 @@ class CreateJournalEntryAction
     public function recordTransaction(Transaction $transaction): array
     {
         $date = today();
-        $dateStr = $date->format('Ymd');
-        $count = JournalEntry::whereDate('entry_date', $date)->distinct('entry_number')->count('entry_number') + 1;
-        $entryNumber = sprintf('JRN-%s-%04d', $dateStr, $count);
+        $entryNumber = JournalEntry::generateNextNumber($date);
 
         $saverName = $transaction->saver?->user?->name ?? 'Nasabah';
 
@@ -85,9 +83,7 @@ class CreateJournalEntryAction
     public function recordVaultTransfer(CashClosure $closure): array
     {
         $date = today();
-        $dateStr = $date->format('Ymd');
-        $count = JournalEntry::whereDate('entry_date', $date)->distinct('entry_number')->count('entry_number') + 1;
-        $entryNumber = sprintf('JRN-%s-%04d', $dateStr, $count);
+        $entryNumber = JournalEntry::generateNextNumber($date);
 
         $tellerName = $closure->teller?->name ?? 'Teller';
         $amountToTransfer = $closure->physical_ending_balance;

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Actions\CloseCashAction;
 use App\Actions\DepositAction;
 use App\Actions\WithdrawAction;
 use App\Enums\CashClosureStatus;
@@ -10,8 +11,10 @@ use App\Enums\MemberAccountStatus;
 use App\Enums\Role;
 use App\Enums\SaverStatus;
 use App\Models\CashClosure;
+use App\Models\JournalEntry;
 use App\Models\Member;
 use App\Models\Saver;
+use App\Models\Transaction;
 use App\Models\User;
 use Database\Seeders\AccountSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -139,6 +142,65 @@ class CashClosureAndVaultTransferTest extends TestCase
             'account_code' => '101',
             'type' => JournalEntryType::Credit->value,
             'amount' => 40000,
+        ]);
+    }
+
+    public function test_cash_closure_stores_negative_system_ending_balance_without_unsigned_overflow(): void
+    {
+        // Teller processes withdrawal (20.000) without opening cash or deposits -> system_ending_balance = -20.000
+        app(WithdrawAction::class)->handle(
+            teller: $this->teller,
+            saver: $this->saver,
+            pin: '123456',
+            amount: 20000
+        );
+
+        $closure = app(CloseCashAction::class)->handle($this->teller, 0, 'Penarikan melebihi kas awal.');
+
+        $this->assertSame(-20000, $closure->system_ending_balance);
+        $this->assertSame(20000, $closure->difference);
+        $this->assertDatabaseHas('cash_closures', [
+            'id' => $closure->id,
+            'system_ending_balance' => -20000,
+            'difference' => 20000,
+        ]);
+    }
+
+    public function test_transaction_and_journal_number_generators_avoid_sequence_collisions_when_gaps_exist(): void
+    {
+        $dateStr = today()->format('Ymd');
+
+        // Seed a higher sequence number while count() is only 1
+        Transaction::create([
+            'transaction_number' => "TRX-{$dateStr}-0005",
+            'saver_id' => $this->saver->id,
+            'teller_id' => $this->teller->id,
+            'type' => 'deposit',
+            'amount' => 10000,
+            'opening_balance' => 100000,
+            'closing_balance' => 110000,
+        ]);
+        $this->saver->update(['balance' => 110000]);
+
+        JournalEntry::create([
+            'entry_number' => "JRN-{$dateStr}-0008",
+            'account_code' => '101',
+            'type' => JournalEntryType::Debit,
+            'amount' => 10000,
+            'description' => 'Existing journal with gap',
+            'entry_date' => today(),
+        ]);
+
+        $nextTransaction = app(DepositAction::class)->handle(
+            teller: $this->teller,
+            amount: 15000,
+            saver: $this->saver
+        );
+
+        $this->assertSame("TRX-{$dateStr}-0006", $nextTransaction->transaction_number);
+        $this->assertDatabaseHas('journal_entries', [
+            'transaction_id' => $nextTransaction->id,
+            'entry_number' => "JRN-{$dateStr}-0009",
         ]);
     }
 }

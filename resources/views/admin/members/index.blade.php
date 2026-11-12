@@ -544,9 +544,9 @@
                             <span class="material-symbols-outlined text-3xl text-slate-400 mb-1">table_view</span>
                             <p class="text-xs text-slate-600 font-medium">Klik untuk memilih berkas atau seret ke sini
                             </p>
-                            <p class="text-[11px] text-slate-400 mt-0.5">Format: <strong>.xlsx, .xls, .csv</strong>
+                            <p class="text-[11px] text-slate-400 mt-0.5">Format: <strong>.xlsx, .csv</strong>
                                 (Maks. 10MB)</p>
-                            <input type="file" name="file" required accept=".xlsx,.xls,.csv"
+                            <input type="file" name="file" required accept=".xlsx,.csv"
                                 class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
                         </div>
                     </div>
