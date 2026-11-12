@@ -5,8 +5,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -19,7 +18,7 @@ return new class extends Migration
             $table->string('entry_number')->index();
             $table->string('account_code')->index();
             $table->enum('type', ['debit', 'credit']);
-            $table->unsignedBigInteger('amount');
+            $table->decimal('amount', 15, 2);
             $table->string('description');
             $table->date('entry_date')->index();
             $table->timestamps();

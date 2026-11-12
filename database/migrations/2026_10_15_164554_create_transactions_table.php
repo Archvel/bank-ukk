@@ -5,8 +5,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -18,9 +17,9 @@ return new class extends Migration
             $table->foreignId('saver_id')->constrained('savers')->onDelete('restrict');
             $table->foreignId('teller_id')->constrained('users')->onDelete('restrict');
             $table->enum('type', ['deposit', 'withdrawal'])->index();
-            $table->unsignedBigInteger('amount');
-            $table->unsignedBigInteger('opening_balance');
-            $table->unsignedBigInteger('closing_balance');
+            $table->decimal('amount', 15, 2);
+            $table->decimal('opening_balance', 15, 2);
+            $table->decimal('closing_balance', 15, 2);
             $table->string('notes')->nullable();
             $table->timestamps();
         });
